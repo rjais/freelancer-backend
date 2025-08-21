@@ -87,15 +87,20 @@ router.post('/submit', async (req, res) => {
 
         // Add documents if provided
         if (documents) {
-            updateData.documents = documents;
+            // Initialize documents structure
+            updateData.documents = {
+                aadhaar: { front: null, back: null },
+                pan: { front: null },
+                drivingLicense: { front: null, back: null }
+            };
             
-            // Also add individual document fields for compatibility
+            // Map document fields to the correct structure
             if (documents.profilePhoto) updateData.profileImage = documents.profilePhoto;
-            if (documents.aadharFront) updateData.documents.aadhaar = { ...updateData.documents.aadhaar, front: documents.aadharFront };
-            if (documents.aadharBack) updateData.documents.aadhaar = { ...updateData.documents.aadhaar, back: documents.aadharBack };
-            if (documents.panCard) updateData.documents.pan = { ...updateData.documents.pan, front: documents.panCard };
-            if (documents.drivingLicenseFront) updateData.documents.drivingLicense = { ...updateData.documents.drivingLicense, front: documents.drivingLicenseFront };
-            if (documents.drivingLicenseBack) updateData.documents.drivingLicense = { ...updateData.documents.drivingLicense, back: documents.drivingLicenseBack };
+            if (documents.aadharFront) updateData.documents.aadhaar.front = documents.aadharFront;
+            if (documents.aadharBack) updateData.documents.aadhaar.back = documents.aadharBack;
+            if (documents.panCard) updateData.documents.pan.front = documents.panCard;
+            if (documents.drivingLicenseFront) updateData.documents.drivingLicense.front = documents.drivingLicenseFront;
+            if (documents.drivingLicenseBack) updateData.documents.drivingLicense.back = documents.drivingLicenseBack;
         }
 
         // Update the user
@@ -173,15 +178,20 @@ router.post('/', firebaseAuth, async (req, res) => {
 
         // Add documents if provided
         if (documents) {
-            updateData.documents = documents;
+            // Initialize documents structure
+            updateData.documents = {
+                aadhaar: { front: null, back: null },
+                pan: { front: null },
+                drivingLicense: { front: null, back: null }
+            };
             
-            // Also add individual document fields for compatibility
+            // Map document fields to the correct structure
             if (documents.profilePhoto) updateData.profileImage = documents.profilePhoto;
-            if (documents.aadharFront) updateData.documents.aadhaar = { ...updateData.documents.aadhaar, front: documents.aadharFront };
-            if (documents.aadharBack) updateData.documents.aadhaar = { ...updateData.documents.aadhaar, back: documents.aadharBack };
-            if (documents.panCard) updateData.documents.pan = { ...updateData.documents.pan, front: documents.panCard };
-            if (documents.drivingLicenseFront) updateData.documents.drivingLicense = { ...updateData.documents.drivingLicense, front: documents.drivingLicenseFront };
-            if (documents.drivingLicenseBack) updateData.documents.drivingLicense = { ...updateData.documents.drivingLicense, back: documents.drivingLicenseBack };
+            if (documents.aadharFront) updateData.documents.aadhaar.front = documents.aadharFront;
+            if (documents.aadharBack) updateData.documents.aadhaar.back = documents.aadharBack;
+            if (documents.panCard) updateData.documents.pan.front = documents.panCard;
+            if (documents.drivingLicenseFront) updateData.documents.drivingLicense.front = documents.drivingLicenseFront;
+            if (documents.drivingLicenseBack) updateData.documents.drivingLicense.back = documents.drivingLicenseBack;
         }
 
         // Update the user
