@@ -76,7 +76,26 @@ router.post('/login', async (req, res) => {
 // Get Users Endpoint (adapted for User model)
 router.get('/users', authenticateAdmin, async (req, res) => {
     try {
-        const { verificationStatus } = req.query;
+        const { verificationStatus, deleteUserId } = req.query;
+        
+        // Handle delete action via query parameter
+        if (deleteUserId) {
+            console.log('Deleting user via query parameter:', deleteUserId);
+            const user = await User.findByIdAndDelete(deleteUserId);
+            
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+            
+            console.log('User deleted successfully:', deleteUserId);
+            return res.json({
+                success: true,
+                message: 'User deleted successfully'
+            });
+        }
         
         let query = { role: 'freelancer' };
         if (verificationStatus) {
@@ -96,35 +115,6 @@ router.get('/users', authenticateAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch users'
-        });
-    }
-});
-
-// Delete User Endpoint (using POST to avoid conflicts)
-router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
-    console.log('DELETE USER called with ID:', req.params.id);
-    try {
-        const user = await User.findByIdAndDelete(req.params.id);
-        
-        if (!user) {
-            console.log('User not found for deletion:', req.params.id);
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-        
-        console.log('User deleted successfully:', req.params.id);
-        res.json({
-            success: true,
-            message: 'User deleted successfully'
-        });
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to delete user',
-            error: error.message
         });
     }
 });
@@ -152,7 +142,7 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Simple Delete User Endpoint
-router.post('/delete-user/:id', authenticateAdmin, async (req, res) => {
+router.get('/delete-user/:id', authenticateAdmin, async (req, res) => {
     console.log('DELETE USER called with ID:', req.params.id);
     try {
         const user = await User.findByIdAndDelete(req.params.id);
@@ -185,8 +175,10 @@ router.patch('/users/:id/verification-status', authenticateAdmin, async (req, re
     try {
         const { isVerified, verificationStatus, verifiedAt, rejectedAt, adminComments, action } = req.body;
         
-        console.log('Verification status update request:', req.body);
-        console.log('Action:', action);
+        console.log('Verification status update request:', JSON.stringify(req.body, null, 2));
+        console.log('Action field:', action);
+        console.log('Action type:', typeof action);
+        console.log('Action === "delete":', action === 'delete');
         
         // Handle delete action
         if (action === 'delete') {
