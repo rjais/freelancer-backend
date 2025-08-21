@@ -100,6 +100,35 @@ router.get('/users', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Delete User Endpoint (using POST to avoid conflicts)
+router.post('/users/:id/delete', authenticateAdmin, async (req, res) => {
+    console.log('DELETE USER called with ID:', req.params.id);
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        
+        if (!user) {
+            console.log('User not found for deletion:', req.params.id);
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        console.log('User deleted successfully:', req.params.id);
+        res.json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete user',
+            error: error.message
+        });
+    }
+});
+
 // Get Single User Endpoint
 router.get('/users/:id', authenticateAdmin, async (req, res) => {
     try {
@@ -122,9 +151,9 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Delete User Endpoint
+// Simple Delete User Endpoint
 router.post('/delete-user/:id', authenticateAdmin, async (req, res) => {
-    console.log('POST /delete-user/:id called with ID:', req.params.id);
+    console.log('DELETE USER called with ID:', req.params.id);
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         
@@ -156,17 +185,23 @@ router.patch('/users/:id/verification-status', authenticateAdmin, async (req, re
     try {
         const { isVerified, verificationStatus, verifiedAt, rejectedAt, adminComments, action } = req.body;
         
+        console.log('Verification status update request:', req.body);
+        console.log('Action:', action);
+        
         // Handle delete action
         if (action === 'delete') {
+            console.log('Deleting user:', req.params.id);
             const user = await User.findByIdAndDelete(req.params.id);
             
             if (!user) {
+                console.log('User not found for deletion:', req.params.id);
                 return res.status(404).json({
                     success: false,
                     message: 'User not found'
                 });
             }
             
+            console.log('User deleted successfully:', req.params.id);
             return res.json({
                 success: true,
                 message: 'User deleted successfully'
