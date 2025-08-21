@@ -619,6 +619,43 @@ async function openReviewModal(userId) {
         document.getElementById('reviewUserPhone').textContent = currentVerification.phone || currentVerification.phoneNumber;
         document.getElementById('reviewSubmitDate').textContent = formatDate(currentVerification.createdAt || currentVerification.verificationSubmittedAt);
         
+        // Add additional user details to the modal
+        const userDetailsDiv = document.querySelector('.user-details');
+        if (userDetailsDiv) {
+            // Add more user details if available
+            let additionalDetails = '';
+            
+            if (currentVerification.dateOfBirth) {
+                additionalDetails += `<p><strong>Date of Birth:</strong> ${currentVerification.dateOfBirth}</p>`;
+            }
+            
+            if (currentVerification.gender) {
+                additionalDetails += `<p><strong>Gender:</strong> ${currentVerification.gender}</p>`;
+            }
+            
+            if (currentVerification.address) {
+                additionalDetails += `<p><strong>Address:</strong> ${currentVerification.address}</p>`;
+            }
+            
+            if (currentVerification.city) {
+                additionalDetails += `<p><strong>City:</strong> ${currentVerification.city}</p>`;
+            }
+            
+            if (currentVerification.state) {
+                additionalDetails += `<p><strong>State:</strong> ${currentVerification.state}</p>`;
+            }
+            
+            if (currentVerification.pincode) {
+                additionalDetails += `<p><strong>Pincode:</strong> ${currentVerification.pincode}</p>`;
+            }
+            
+            // Insert additional details after the existing ones
+            if (additionalDetails) {
+                const submitDateElement = document.getElementById('reviewSubmitDate').parentElement;
+                submitDateElement.insertAdjacentHTML('afterend', additionalDetails);
+            }
+        }
+        
         // Load documents (you'll need to adjust this based on your document structure)
         if (currentVerification.documents) {
             loadDocumentsInModal(currentVerification.documents, currentVerification.documentType);
@@ -663,15 +700,63 @@ function loadUserDocumentsInModal(user) {
     const documents = [];
     
     // Add profile photo if available
-    if (user.profilePhoto) {
+    if (user.profileImage || user.profilePhoto) {
         documents.push({
             type: 'Profile Photo',
-            url: user.profilePhoto,
+            url: user.profileImage || user.profilePhoto,
             side: 'Front'
         });
     }
     
-    // Add Aadhar documents if available
+    // Add documents from nested structure
+    if (user.documents) {
+        // Aadhar documents
+        if (user.documents.aadhaar) {
+            if (user.documents.aadhaar.front) {
+                documents.push({
+                    type: 'Aadhar Card',
+                    url: user.documents.aadhaar.front,
+                    side: 'Front'
+                });
+            }
+            if (user.documents.aadhaar.back) {
+                documents.push({
+                    type: 'Aadhar Card',
+                    url: user.documents.aadhaar.back,
+                    side: 'Back'
+                });
+            }
+        }
+        
+        // PAN document
+        if (user.documents.pan && user.documents.pan.front) {
+            documents.push({
+                type: 'PAN Card',
+                url: user.documents.pan.front,
+                side: 'Front'
+            });
+        }
+        
+        // Driving License documents
+        if (user.documents.drivingLicense) {
+            if (user.documents.drivingLicense.front) {
+                documents.push({
+                    type: 'Driving License',
+                    url: user.documents.drivingLicense.front,
+                    side: 'Front'
+                });
+            }
+            if (user.documents.drivingLicense.back) {
+                documents.push({
+                    type: 'Driving License',
+                    url: user.documents.drivingLicense.back,
+                    side: 'Back'
+                });
+            }
+        }
+    }
+    
+    // Also check for flat document fields (backward compatibility)
     if (user.aadharFront) {
         documents.push({
             type: 'Aadhar Card',
@@ -688,7 +773,6 @@ function loadUserDocumentsInModal(user) {
         });
     }
     
-    // Add PAN document if available
     if (user.panCard) {
         documents.push({
             type: 'PAN Card',
@@ -697,7 +781,6 @@ function loadUserDocumentsInModal(user) {
         });
     }
     
-    // Add Driving License documents if available
     if (user.drivingLicenseFront) {
         documents.push({
             type: 'Driving License',
@@ -737,6 +820,13 @@ function closeReviewModal() {
     document.getElementById('reviewModal').classList.remove('active');
     currentVerification = null;
     document.getElementById('reviewComments').value = '';
+    
+    // Clear additional user details that were dynamically added
+    const userDetailsDiv = document.querySelector('.user-details');
+    if (userDetailsDiv) {
+        const additionalDetails = userDetailsDiv.querySelectorAll('p:not(:nth-child(-n+4))');
+        additionalDetails.forEach(detail => detail.remove());
+    }
 }
 
 async function approveVerification() {
