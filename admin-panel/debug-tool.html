@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Debug Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .user-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        .user-item:hover {
+            background: #f0f0f0;
+        }
+        .user-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .image-test {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+        .image-test img {
+            max-width: 200px;
+            max-height: 150px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        .error {
+            color: red;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .success {
+            color: green;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .info {
+            color: #2196f3;
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Document Debug Tool</h1>
+        
+        <div class="section">
+            <h2>1. Fetch All Users</h2>
+            <button onclick="fetchAllUsers()">Fetch Users</button>
+            <div id="userList" class="user-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>2. Test Image URLs</h2>
+            <input type="text" id="imageUrl" placeholder="Enter image URL to test" value="https://freelancer-backend-jv21.onrender.com/uploads/document-1755806341890-351863628.png">
+            <button onclick="testImageUrl()">Test Image</button>
+            <div id="imageTestResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>3. Test Upload Endpoint</h2>
+            <input type="file" id="testFile" accept="image/*">
+            <button onclick="testUpload()">Test Upload</button>
+            <div id="uploadResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>4. Debug Logs</h2>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <div id="debugLogs" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://freelancer-backend-jv21.onrender.com/api';
+        let selectedUser = null;
+
+        function log(message) {
+            const logs = document.getElementById('debugLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.textContent += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('debugLogs').textContent = '';
+        }
+
+        async function fetchAllUsers() {
+            try {
+                log('Fetching all users...');
+                const response = await fetch(`${API_BASE_URL}/verification/debug`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`Found ${data.count} users`);
+                    displayUsers(data.users);
+                } else {
+                    log('Failed to fetch users: ' + data.message);
+                }
+            } catch (error) {
+                log('Error fetching users: ' + error.message);
+            }
+        }
+
+        function displayUsers(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item';
+                userDiv.innerHTML = `
+                    <strong>${user.name || 'No Name'}</strong><br>
+                    Phone: ${user.phone}<br>
+                    Status: ${user.verificationStatus || 'N/A'}<br>
+                    Documents: ${user.documents ? 'Yes' : 'No'}
+                `;
+                userDiv.onclick = () => selectUser(user);
+                userList.appendChild(userDiv);
+            });
+        }
+
+        function selectUser(user) {
+            selectedUser = user;
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('selected'));
+            event.target.closest('.user-item').classList.add('selected');
+            
+            log(`Selected user: ${user.name} (${user.phone})`);
+            log('User documents: ' + JSON.stringify(user.documents, null, 2));
+            
+            if (user.documents) {
+                testUserDocuments(user);
+            } else {
+                log('No documents found for this user');
+            }
+        }
+
+        async function testUserDocuments(user) {
+            const documents = [];
+            
+            // Collect all document URLs
+            if (user.profileImage) {
+                documents.push({ type: 'Profile Photo', url: user.profileImage });
+            }
+            
+            if (user.documents) {
+                if (user.documents.aadhaar?.front) {
+                    documents.push({ type: 'Aadhar Front', url: user.documents.aadhaar.front });
+                }
+                if (user.documents.aadhaar?.back) {
+                    documents.push({ type: 'Aadhar Back', url: user.documents.aadhaar.back });
+                }
+                if (user.documents.pan?.front) {
+                    documents.push({ type: 'PAN Front', url: user.documents.pan.front });
+                }
+                if (user.documents.drivingLicense?.front) {
+                    documents.push({ type: 'DL Front', url: user.documents.drivingLicense.front });
+                }
+                if (user.documents.drivingLicense?.back) {
+                    documents.push({ type: 'DL Back', url: user.documents.drivingLicense.back });
+                }
+            }
+            
+            log(`Testing ${documents.length} documents for user ${user.name}`);
+            
+            const testResult = document.getElementById('imageTestResult');
+            testResult.innerHTML = '<h3>Document Test Results:</h3>';
+            
+            for (const doc of documents) {
+                const result = await testSingleImage(doc.url, doc.type);
+                const resultDiv = document.createElement('div');
+                resultDiv.className = result.success ? 'success' : 'error';
+                resultDiv.innerHTML = `
+                    <strong>${doc.type}:</strong> ${result.success ? '✅ Success' : '❌ Failed'}<br>
+                    URL: ${doc.url}<br>
+                    ${result.message}
+                `;
+                testResult.appendChild(resultDiv);
+            }
+        }
+
+        async function testImageUrl() {
+            const url = document.getElementById('imageUrl').value;
+            if (!url) {
+                log('Please enter an image URL');
+                return;
+            }
+            
+            const result = await testSingleImage(url, 'Manual Test');
+            const resultDiv = document.getElementById('imageTestResult');
+            resultDiv.innerHTML = `
+                <h3>Test Result:</h3>
+                <div class="${result.success ? 'success' : 'error'}">
+                    ${result.success ? '✅ Success' : '❌ Failed'}<br>
+                    ${result.message}
+                </div>
+                ${result.success ? `<img src="${url}" style="max-width: 200px; max-height: 150px; border: 1px solid #ccc;">` : ''}
+            `;
+        }
+
+        async function testSingleImage(url, type) {
+            try {
+                log(`Testing image: ${type} - ${url}`);
+                
+                const response = await fetch(url, { method: 'HEAD' });
+                log(`Response status: ${response.status}`);
+                log(`Content-Type: ${response.headers.get('content-type')}`);
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.startsWith('image/')) {
+                        log(`✅ Image test successful for ${type}`);
+                        return { success: true, message: `Image loads successfully (${contentType})` };
+                    } else {
+                        log(`❌ Not an image: ${contentType}`);
+                        return { success: false, message: `Not an image: ${contentType}` };
+                    }
+                } else {
+                    log(`❌ Image test failed: ${response.status} ${response.statusText}`);
+                    return { success: false, message: `HTTP ${response.status}: ${response.statusText}` };
+                }
+            } catch (error) {
+                log(`❌ Image test error: ${error.message}`);
+                return { success: false, message: `Error: ${error.message}` };
+            }
+        }
+
+        async function testUpload() {
+            const fileInput = document.getElementById('testFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                log('Please select a file to upload');
+                return;
+            }
+            
+            try {
+                log(`Testing upload with file: ${file.name} (${file.type})`);
+                
+                const formData = new FormData();
+                formData.append('document', file);
+                
+                const response = await fetch(`${API_BASE_URL}/upload/single`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                log(`Upload response: ${JSON.stringify(result, null, 2)}`);
+                
+                const resultDiv = document.getElementById('uploadResult');
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Upload successful<br>
+                            URL: ${result.file.url}<br>
+                            Filename: ${result.file.filename}
+                        </div>
+                    `;
+                    
+                    // Test the uploaded image
+                    const imageTest = await testSingleImage(result.file.url, 'Uploaded File');
+                    if (imageTest.success) {
+                        resultDiv.innerHTML += `<img src="${result.file.url}" style="max-width: 200px; max-height: 150px; border: 1px solid #ccc;">`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Upload failed: ${result.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                log(`Upload error: ${error.message}`);
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="error">
+                        ❌ Upload error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-fetch users on page load
+        window.onload = function() {
+            log('Debug tool loaded');
+            fetchAllUsers();
+        };
+    </script>
+</body>
+</html>
