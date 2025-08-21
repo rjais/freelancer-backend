@@ -3,7 +3,7 @@
 
 const CONFIG = {
     // Main App API Base URL
-    API_BASE_URL: 'http://192.168.1.46:5000/api', // Connected to your app successfully
+    API_BASE_URL: 'https://freelancer-backend-jv21.onrender.com/api', // Connected to your app successfully
     
     // Authentication - Updated for Firebase
     AUTH_ENDPOINTS: {

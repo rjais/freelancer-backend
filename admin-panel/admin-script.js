@@ -888,21 +888,21 @@ function fixDocumentUrl(url) {
     
     // If it's a relative path starting with /uploads, add server base URL
     if (url.startsWith('/uploads/')) {
-        return `http://192.168.1.46:5000${url}`;
+        return `https://freelancer-backend-jv21.onrender.com${url}`;
     }
     
     // If it's a relative path, add server base URL
     if (url.startsWith('/')) {
-        return `http://192.168.1.46:5000${url}`;
+        return `https://freelancer-backend-jv21.onrender.com${url}`;
     }
     
     // If it's just a filename, assume it's in uploads folder
     if (!url.includes('/')) {
-        return `http://192.168.1.46:5000/uploads/${url}`;
+        return `https://freelancer-backend-jv21.onrender.com/uploads/${url}`;
     }
     
     // Default: add server base URL
-    return `http://192.168.1.46:5000/${url}`;
+    return `https://freelancer-backend-jv21.onrender.com/${url}`;
 }
 
 function closeReviewModal() {
