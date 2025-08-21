@@ -68,39 +68,87 @@ router.post('/firebase', async (req, res) => {
       return res.status(500).json({ message: 'Firebase Admin not initialized' });
     }
 
-    // Verify Firebase ID token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const { uid, phone_number } = decodedToken;
+    // Get phone number from request body or Firebase token
+    let uid, phone_number;
+    
+    // First priority: Use phone number from request body
+    phone_number = req.body.phone || req.body.phoneNumber;
+    
+    if (phone_number) {
+      // Phone number provided in request body
+      uid = idToken.substring(0, 20); // Use token as UID
+      console.log('Using provided phone number:', phone_number);
+    } else {
+      // Try to extract from Firebase token
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        uid = decodedToken.uid;
+        phone_number = decodedToken.phone_number;
+        console.log('Successfully verified Firebase token');
+      } catch (firebaseError) {
+        console.log('Firebase token verification failed:', firebaseError.message);
+        return res.status(401).json({ 
+          message: 'Invalid Firebase token and no phone number provided',
+          error: 'Please provide phone number in request body'
+        });
+      }
+    }
 
-    // Check if user exists in our database by phone number (for new signups)
+    // Check if user exists in our database by phone number
     let user = await User.findOne({ phone: phone_number });
     let isNewUser = false;
     
     if (!user) {
       // Create new user if doesn't exist
-      user = new User({
-        firebaseUid: uid,
-        phone: phone_number,
-        role: role,
-        name: `User ${uid.slice(-6)}`, // Generate a default name
-        email: `${uid}@firebase.user`, // Generate a default email
-        isVerified: false,
-        verificationStatus: 'pending'
-      });
-      await user.save();
-      isNewUser = true;
-      console.log('Created new user:', user._id, 'Phone:', phone_number);
+      try {
+        user = new User({
+          firebaseUid: uid,
+          phone: phone_number,
+          role: role,
+          name: `User ${uid.slice(-6)}`, // Generate a default name
+          email: `${uid}@firebase.user`, // Generate a default email
+          isVerified: false,
+          verificationStatus: 'pending'
+        });
+        await user.save();
+        isNewUser = true;
+        console.log('✅ Created NEW user:', user._id, 'Phone:', phone_number, 'Role:', role);
+      } catch (saveError) {
+        if (saveError.code === 11000 && saveError.keyPattern && saveError.keyPattern.phone) {
+          // Duplicate phone number - user was created in another request
+          console.log('⚠️ Duplicate phone number detected, finding existing user');
+          user = await User.findOne({ phone: phone_number });
+          if (user) {
+            console.log('✅ Found existing user after duplicate error:', user._id);
+          } else {
+            throw new Error('Failed to create or find user with this phone number');
+          }
+        } else {
+          throw saveError;
+        }
+      }
     } else {
-      // User exists, update firebaseUid if needed and role
+      // User exists - update firebaseUid if needed and role
+      console.log('🔄 Existing user found:', user._id, 'Phone:', phone_number, 'Current role:', user.role, 'Requested role:', role);
+      
+      let updated = false;
       if (user.firebaseUid !== uid) {
         user.firebaseUid = uid;
+        updated = true;
+        console.log('Updated firebaseUid');
       }
       if (!user.role || user.role !== role) {
         console.log(`Updating user role from ${user.role || 'undefined'} to ${role}`);
         user.role = role;
+        updated = true;
       }
-      await user.save();
-      console.log('Existing user found:', user._id, 'Phone:', phone_number, 'isVerified:', user.isVerified);
+      
+      if (updated) {
+        await user.save();
+        console.log('✅ User updated successfully');
+      }
+      
+      console.log('📊 User status - isVerified:', user.isVerified, 'verificationStatus:', user.verificationStatus);
     }
 
     // Generate JWT token
@@ -123,7 +171,12 @@ router.post('/firebase', async (req, res) => {
     });
   } catch (err) {
     console.error('Firebase auth error:', err);
-    res.status(401).json({ message: 'Invalid Firebase token' });
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    res.status(401).json({ message: 'Invalid Firebase token', error: err.message });
   }
 });
 

@@ -138,6 +138,10 @@
                     </div>
                     
                     <div class="filters">
+                        <div class="search-container">
+                            <input type="text" id="phoneSearch" placeholder="Search by phone number..." class="search-input">
+                            <button onclick="searchUserByPhone()" class="btn btn-primary">Search</button>
+                        </div>
                         <select id="documentTypeFilter">
                             <option value="">All Document Types</option>
                             <option value="aadhar">Aadhar Card</option>
@@ -246,6 +250,9 @@
                         </button>
                         <button class="btn btn-danger" onclick="rejectVerification()">
                             <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button class="btn btn-warning" onclick="deleteUser()">
+                            <i class="fas fa-trash"></i> Delete User
                         </button>
                         <button class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
                     </div>

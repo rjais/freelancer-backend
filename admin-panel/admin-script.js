@@ -656,12 +656,12 @@ async function openReviewModal(userId) {
             }
         }
         
-        // Load documents (you'll need to adjust this based on your document structure)
+        // Load documents from user structure
         if (currentVerification.documents) {
-            loadDocumentsInModal(currentVerification.documents, currentVerification.documentType);
-        } else {
-            // Show uploaded documents from your user structure
             loadUserDocumentsInModal(currentVerification);
+        } else {
+            // Fallback to old document structure
+            loadDocumentsInModal(currentVerification.documents, currentVerification.documentType);
         }
         
         // Show modal
@@ -696,14 +696,18 @@ function loadUserDocumentsInModal(user) {
     const documentGrid = document.getElementById('documentGrid');
     documentGrid.innerHTML = '';
     
+    console.log('Loading documents for user:', user);
+    console.log('User documents structure:', user.documents);
+    
     // Display user's uploaded documents based on your app's structure
     const documents = [];
     
     // Add profile photo if available
     if (user.profileImage || user.profilePhoto) {
+        const profileUrl = fixDocumentUrl(user.profileImage || user.profilePhoto);
         documents.push({
             type: 'Profile Photo',
-            url: user.profileImage || user.profilePhoto,
+            url: profileUrl,
             side: 'Front'
         });
     }
@@ -715,14 +719,14 @@ function loadUserDocumentsInModal(user) {
             if (user.documents.aadhaar.front) {
                 documents.push({
                     type: 'Aadhar Card',
-                    url: user.documents.aadhaar.front,
+                    url: fixDocumentUrl(user.documents.aadhaar.front),
                     side: 'Front'
                 });
             }
             if (user.documents.aadhaar.back) {
                 documents.push({
                     type: 'Aadhar Card',
-                    url: user.documents.aadhaar.back,
+                    url: fixDocumentUrl(user.documents.aadhaar.back),
                     side: 'Back'
                 });
             }
@@ -732,7 +736,7 @@ function loadUserDocumentsInModal(user) {
         if (user.documents.pan && user.documents.pan.front) {
             documents.push({
                 type: 'PAN Card',
-                url: user.documents.pan.front,
+                url: fixDocumentUrl(user.documents.pan.front),
                 side: 'Front'
             });
         }
@@ -742,14 +746,14 @@ function loadUserDocumentsInModal(user) {
             if (user.documents.drivingLicense.front) {
                 documents.push({
                     type: 'Driving License',
-                    url: user.documents.drivingLicense.front,
+                    url: fixDocumentUrl(user.documents.drivingLicense.front),
                     side: 'Front'
                 });
             }
             if (user.documents.drivingLicense.back) {
                 documents.push({
                     type: 'Driving License',
-                    url: user.documents.drivingLicense.back,
+                    url: fixDocumentUrl(user.documents.drivingLicense.back),
                     side: 'Back'
                 });
             }
@@ -760,7 +764,7 @@ function loadUserDocumentsInModal(user) {
     if (user.aadharFront) {
         documents.push({
             type: 'Aadhar Card',
-            url: user.aadharFront,
+            url: fixDocumentUrl(user.aadharFront),
             side: 'Front'
         });
     }
@@ -768,7 +772,7 @@ function loadUserDocumentsInModal(user) {
     if (user.aadharBack) {
         documents.push({
             type: 'Aadhar Card',
-            url: user.aadharBack,
+            url: fixDocumentUrl(user.aadharBack),
             side: 'Back'
         });
     }
@@ -776,7 +780,7 @@ function loadUserDocumentsInModal(user) {
     if (user.panCard) {
         documents.push({
             type: 'PAN Card',
-            url: user.panCard,
+            url: fixDocumentUrl(user.panCard),
             side: 'Front'
         });
     }
@@ -784,7 +788,7 @@ function loadUserDocumentsInModal(user) {
     if (user.drivingLicenseFront) {
         documents.push({
             type: 'Driving License',
-            url: user.drivingLicenseFront,
+            url: fixDocumentUrl(user.drivingLicenseFront),
             side: 'Front'
         });
     }
@@ -792,28 +796,113 @@ function loadUserDocumentsInModal(user) {
     if (user.drivingLicenseBack) {
         documents.push({
             type: 'Driving License',
-            url: user.drivingLicenseBack,
+            url: fixDocumentUrl(user.drivingLicenseBack),
             side: 'Back'
         });
     }
     
     // Display documents
     documents.forEach(doc => {
+        console.log('Processing document:', doc);
         const documentItem = document.createElement('div');
         documentItem.className = 'document-item';
         
-        documentItem.innerHTML = `
-            <img src="${doc.url}" alt="${doc.type} ${doc.side}" onclick="openImageModal('${doc.url}', '${doc.type} ${doc.side}')">
-            <p>${doc.type} - ${doc.side}</p>
-        `;
+        // Add error handling for image loading
+        const img = document.createElement('img');
+        img.alt = `${doc.type} ${doc.side}`;
+        img.onclick = () => openImageModal(doc.url, `${doc.type} ${doc.side}`);
+        img.onerror = () => {
+            console.error('Failed to load image:', doc.url);
+            img.style.display = 'none';
+            documentItem.innerHTML = `
+                <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;">
+                    <p style="color: #666; margin: 0;">Image not accessible</p>
+                    <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">${doc.url}</p>
+                </div>
+                <p>${doc.type} - ${doc.side}</p>
+            `;
+        };
+        img.onload = () => {
+            console.log('Successfully loaded image:', doc.url);
+        };
+        img.src = doc.url;
+        
+        documentItem.appendChild(img);
+        
+        const label = document.createElement('p');
+        label.textContent = `${doc.type} - ${doc.side}`;
+        documentItem.appendChild(label);
         
         documentGrid.appendChild(documentItem);
     });
     
+    // Debug: Show what documents were found
+    console.log('Total documents found:', documents.length);
+    documents.forEach((doc, index) => {
+        console.log(`Document ${index + 1}:`, doc);
+    });
+    
     // If no documents found
     if (documents.length === 0) {
-        documentGrid.innerHTML = '<p style="text-align: center; color: #64748b;">No documents uploaded yet.</p>';
+        documentGrid.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 20px;">
+                <p>No documents uploaded yet.</p>
+                <p style="font-size: 12px; color: #999;">User ID: ${user._id}</p>
+                <p style="font-size: 12px; color: #999;">Profile Image: ${user.profileImage || 'None'}</p>
+                <p style="font-size: 12px; color: #999;">Documents Object: ${JSON.stringify(user.documents, null, 2)}</p>
+            </div>
+        `;
+    } else {
+        // Add a summary of documents found
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.cssText = 'background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 8px; font-size: 12px; color: #666;';
+        summaryDiv.innerHTML = `
+            <strong>Documents Summary:</strong><br>
+            • Profile Photo: ${user.profileImage ? '✅ Uploaded' : '❌ Missing'}<br>
+            • Aadhar Front: ${user.documents?.aadhaar?.front ? '✅ Uploaded' : '❌ Missing'}<br>
+            • Aadhar Back: ${user.documents?.aadhaar?.back ? '✅ Uploaded' : '❌ Missing'}<br>
+            • PAN Front: ${user.documents?.pan?.front ? '✅ Uploaded' : '❌ Missing'}<br>
+            • Driving License Front: ${user.documents?.drivingLicense?.front ? '✅ Uploaded' : '❌ Missing'}<br>
+            • Driving License Back: ${user.documents?.drivingLicense?.back ? '✅ Uploaded' : '❌ Missing'}<br>
+            <br><strong>Note:</strong> File:// URLs from mobile app cache are not accessible from web browser.
+        `;
+        documentGrid.insertBefore(summaryDiv, documentGrid.firstChild);
     }
+}
+
+// Function to fix document URLs
+function fixDocumentUrl(url) {
+    if (!url) return '';
+    
+    console.log('Original URL:', url);
+    
+    // If it's already a full URL, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    
+    // If it's a file:// URL, use the document proxy
+    if (url.startsWith('file://')) {
+        return `${CONFIG.API_BASE_URL}/admin/document-proxy?url=${encodeURIComponent(url)}`;
+    }
+    
+    // If it's a relative path starting with /uploads, add server base URL
+    if (url.startsWith('/uploads/')) {
+        return `http://192.168.1.46:5000${url}`;
+    }
+    
+    // If it's a relative path, add server base URL
+    if (url.startsWith('/')) {
+        return `http://192.168.1.46:5000${url}`;
+    }
+    
+    // If it's just a filename, assume it's in uploads folder
+    if (!url.includes('/')) {
+        return `http://192.168.1.46:5000/uploads/${url}`;
+    }
+    
+    // Default: add server base URL
+    return `http://192.168.1.46:5000/${url}`;
 }
 
 function closeReviewModal() {
@@ -935,6 +1024,98 @@ async function rejectVerification() {
     } catch (error) {
         console.error('Failed to reject verification:', error);
         showNotification('Failed to reject verification. Please try again.', 'error');
+    }
+}
+
+async function deleteUser() {
+    if (!currentVerification) return;
+    
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete this user? This action cannot be undone and will remove all user data from the database.');
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        if (API) {
+            // Use the existing delete user endpoint
+            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/delete-user/${currentVerification._id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete user');
+            }
+        } else {
+            // Update demo data - remove the verification from the list
+            const index = verifications.findIndex(v => v._id === currentVerification._id);
+            if (index !== -1) {
+                verifications.splice(index, 1);
+            }
+        }
+        
+        // Close modal and refresh
+        closeReviewModal();
+        updateDashboard();
+        showSection('pending');
+        
+        // Show success message
+        showNotification('User deleted successfully!', 'success');
+    } catch (error) {
+        console.error('Failed to delete user:', error);
+        showNotification('Failed to delete user. Please try again.', 'error');
+    }
+}
+
+async function searchUserByPhone() {
+    const phoneNumber = document.getElementById('phoneSearch').value.trim();
+    
+    if (!phoneNumber) {
+        showNotification('Please enter a phone number to search', 'error');
+        return;
+    }
+    
+    try {
+        if (API) {
+            // Search user by phone number
+            const response = await fetch(`${CONFIG.API_BASE_URL}/admin/users?phone=${phoneNumber}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to search user');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.user) {
+                // Open the review modal with the found user
+                currentVerification = data.user;
+                await openReviewModal(data.user._id);
+                showNotification('User found!', 'success');
+            } else {
+                showNotification('User not found with this phone number', 'error');
+            }
+        } else {
+            // Demo mode - search in sample data
+            const foundUser = sampleVerifications.find(v => v.userPhone === phoneNumber);
+            if (foundUser) {
+                currentVerification = foundUser;
+                await openReviewModal(foundUser._id);
+                showNotification('User found!', 'success');
+            } else {
+                showNotification('User not found with this phone number', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Failed to search user:', error);
+        showNotification('Failed to search user. Please try again.', 'error');
     }
 }
 

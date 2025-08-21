@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String }, // Make password optional for Firebase users
   firebaseUid: { type: String, unique: true, sparse: true }, // Add Firebase UID
   role: { type: String, enum: ['client', 'freelancer'], required: true },
-  phone: { type: String },
+  phone: { type: String, unique: true, sparse: true },
   gender: { type: String },
   address: { type: String },
   profileImage: { type: String },

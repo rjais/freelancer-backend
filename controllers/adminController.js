@@ -3,6 +3,10 @@ const bcrypt = require('bcryptjs');
 const Verification = require('../models/Verification');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+const Application = require('../models/Application');
+const Message = require('../models/Message');
+const Job = require('../models/Job');
 
 class AdminController {
     // Authentication
@@ -290,6 +294,71 @@ class AdminController {
             res.status(404).json({ 
                 success: false, 
                 message: 'Document not found' 
+            });
+        }
+    }
+    
+    // Delete user and all related data
+    async deleteUser(req, res) {
+        try {
+            const userId = req.params.id;
+            
+            // Check if user exists
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+            
+            // Delete all related data
+            await Promise.all([
+                // Delete verifications
+                Verification.deleteMany({ userId: userId }),
+                
+                // Delete transactions
+                Transaction.deleteMany({ userId: userId }),
+                
+                // Delete applications where user is freelancer
+                Application.deleteMany({ freelancer: userId }),
+                
+                // Delete messages where user is sender or receiver
+                Message.deleteMany({
+                    $or: [
+                        { sender: userId },
+                        { receiver: userId }
+                    ]
+                }),
+                
+                // Update jobs where user is client (set client to null)
+                Job.updateMany(
+                    { client: userId },
+                    { $unset: { client: 1 } }
+                ),
+                
+                // Update jobs where user is freelancer (set freelancer to null)
+                Job.updateMany(
+                    { freelancer: userId },
+                    { $unset: { freelancer: 1 } }
+                )
+            ]);
+            
+            // Finally delete the user
+            await User.findByIdAndDelete(userId);
+            
+            console.log(`User ${userId} and all related data deleted successfully`);
+            
+            res.json({
+                success: true,
+                message: 'User and all related data deleted successfully'
+            });
+        } catch (error) {
+            console.error('Delete user error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to delete user',
+                error: error.message
             });
         }
     }

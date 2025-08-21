@@ -76,24 +76,50 @@ router.post('/login', async (req, res) => {
 // Get Users Endpoint (adapted for User model)
 router.get('/users', authenticateAdmin, async (req, res) => {
     try {
-        const { verificationStatus, deleteUserId } = req.query;
+        const { verificationStatus, deleteUserId, phone } = req.query;
         
         // Handle delete action via query parameter
         if (deleteUserId) {
             console.log('Deleting user via query parameter:', deleteUserId);
-            const user = await User.findByIdAndDelete(deleteUserId);
+            
+            // Import the admin controller
+            const adminController = require('../controllers/adminController');
+            
+            // Create a mock request object for the delete method
+            const mockReq = {
+                params: { id: deleteUserId },
+                status: (code) => ({
+                    json: (data) => {
+                        if (code === 404) {
+                            return res.status(404).json(data);
+                        } else if (code === 500) {
+                            return res.status(500).json(data);
+                        }
+                        return res.json(data);
+                    }
+                })
+            };
+            
+            // Use the comprehensive delete method
+            await adminController.deleteUser(mockReq, res);
+            return; // Exit early
+        }
+        
+                // Handle phone number search
+        if (phone) {
+            console.log('Searching user by phone number:', phone);
+            const user = await User.findOne({ phone: phone });
             
             if (!user) {
                 return res.status(404).json({
                     success: false,
-                    message: 'User not found'
+                    message: 'User not found with this phone number'
                 });
             }
             
-            console.log('User deleted successfully:', deleteUserId);
             return res.json({
                 success: true,
-                message: 'User deleted successfully'
+                user: user
             });
         }
         
@@ -141,31 +167,65 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Simple Delete User Endpoint
+// Comprehensive Delete User Endpoint
 router.get('/delete-user/:id', authenticateAdmin, async (req, res) => {
     console.log('DELETE USER called with ID:', req.params.id);
+    
+    // Import the admin controller
+    const adminController = require('../controllers/adminController');
+    
+    // Use the comprehensive delete method
+    await adminController.deleteUser(req, res);
+});
+
+// Document proxy endpoint to handle file:// URLs
+router.get('/document-proxy', authenticateAdmin, async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const { url } = req.query;
         
-        if (!user) {
-            console.log('User not found for deletion:', req.params.id);
-            return res.status(404).json({
+        if (!url) {
+            return res.status(400).json({
                 success: false,
-                message: 'User not found'
+                message: 'URL parameter is required'
             });
         }
         
-        console.log('User deleted successfully:', req.params.id);
-        res.json({
-            success: true,
-            message: 'User deleted successfully'
-        });
+        console.log('Document proxy request for URL:', url);
+        
+        // For file:// URLs, we'll return a placeholder image
+        if (url.startsWith('file://')) {
+            // Return a placeholder image or error message
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.send(`
+                <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="150" fill="#f0f0f0"/>
+                    <text x="100" y="75" font-family="Arial" font-size="12" fill="#666" text-anchor="middle">
+                        Document not accessible
+                    </text>
+                    <text x="100" y="95" font-family="Arial" font-size="10" fill="#999" text-anchor="middle">
+                        ${url.split('/').pop()}
+                    </text>
+                </svg>
+            `);
+        } else {
+            // For other URLs, try to proxy them
+            const response = await fetch(url);
+            if (response.ok) {
+                const buffer = await response.arrayBuffer();
+                res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+                res.send(Buffer.from(buffer));
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: 'Document not found'
+                });
+            }
+        }
     } catch (error) {
-        console.error('Error deleting user:', error);
+        console.error('Document proxy error:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete user',
-            error: error.message
+            message: 'Failed to load document'
         });
     }
 });

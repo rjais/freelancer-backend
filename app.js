@@ -29,6 +29,7 @@ const walletRouter = require('./routes/wallet');
 const bankVerificationRouter = require('./routes/bank-verification');
 const verificationRouter = require('./routes/verification');
 const adminRouter = require('./routes/admin');
+const uploadRouter = require('./routes/upload');
 
 var app = express();
 
@@ -70,5 +71,6 @@ app.use('/api/wallet', walletRouter);
 app.use('/api/bank-verification', bankVerificationRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/upload', uploadRouter);
 
 module.exports = app;
