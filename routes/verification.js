@@ -36,6 +36,10 @@ async function firebaseAuth(req, res, next) {
 // POST /api/verifications - Submit verification (without Firebase auth for testing)
 router.post('/submit', async (req, res) => {
     try {
+        console.log('=== VERIFICATION SUBMISSION DEBUG ===');
+        console.log('Request body:', JSON.stringify(req.body, null, 2));
+        console.log('Phone number from body:', req.body.phone);
+        
         const {
             firstName,
             lastName,
