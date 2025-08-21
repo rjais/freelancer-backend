@@ -825,7 +825,7 @@ function loadUserDocumentsInModal(user) {
         img.onload = () => {
             console.log('Successfully loaded image:', doc.url);
         };
-        img.src = doc.url;
+        img.src = fixDocumentUrl(doc.url);
         
         documentItem.appendChild(img);
         
@@ -883,7 +883,7 @@ function fixDocumentUrl(url) {
     
     // If it's a file:// URL, use the document proxy
     if (url.startsWith('file://')) {
-        return `${CONFIG.API_BASE_URL}/admin/document-proxy?url=${encodeURIComponent(url)}`;
+        return `${CONFIG.API_BASE_URL.replace('/api', '')}/admin/document-proxy?url=${encodeURIComponent(url)}`;
     }
     
     // If it's a relative path starting with /uploads, add server base URL
