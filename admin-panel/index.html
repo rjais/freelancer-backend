@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People Admin - ID Verification</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="../1000013213 (1).png" alt="People Logo" style="height: 50px; width: auto;">
+                <h2>People Admin Panel</h2>
+                <p>ID Verification Management</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <img src="../1000013213 (1).png" alt="People Logo" style="height: 40px; width: auto;">
+                <h1>People Admin Panel</h1>
+            </div>
+            <div class="header-right">
+                <span class="admin-name">Admin User</span>
+                <button id="logoutBtn" class="btn btn-outline">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="admin-content">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <nav class="sidebar-nav">
+                    <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="#pending" class="nav-item" data-section="pending">
+                        <i class="fas fa-clock"></i>
+                        Pending Verifications
+                        <span class="badge" id="pendingCount">0</span>
+                    </a>
+                    <a href="#approved" class="nav-item" data-section="approved">
+                        <i class="fas fa-check-circle"></i>
+                        Approved
+                    </a>
+                    <a href="#rejected" class="nav-item" data-section="rejected">
+                        <i class="fas fa-times-circle"></i>
+                        Rejected
+                    </a>
+                    <a href="#settings" class="nav-item" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Area -->
+            <main class="admin-main">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section active">
+                    <div class="section-header">
+                        <h2>Dashboard Overview</h2>
+                        <p>ID Verification Management</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon pending">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="pendingStats">0</h3>
+                                <p>Pending Verifications</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon approved">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="approvedStats">0</h3>
+                                <p>Approved Today</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon rejected">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="rejectedStats">0</h3>
+                                <p>Rejected Today</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon total">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalStats">0</h3>
+                                <p>Total Verifications</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <h3>Recent Activity</h3>
+                        <div class="activity-list" id="recentActivity">
+                            <!-- Activity items will be populated here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pending Verifications Section -->
+                <section id="pending" class="content-section">
+                    <div class="section-header">
+                        <h2>Pending Verifications</h2>
+                        <p>Review and process ID verification requests</p>
+                    </div>
+                    
+                    <div class="filters">
+                        <select id="documentTypeFilter">
+                            <option value="">All Document Types</option>
+                            <option value="aadhar">Aadhar Card</option>
+                            <option value="pan">PAN Card</option>
+                            <option value="driving">Driving License</option>
+                        </select>
+                        <select id="dateFilter">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+
+                    <div class="verifications-list" id="pendingVerifications">
+                        <!-- Verification items will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Approved Section -->
+                <section id="approved" class="content-section">
+                    <div class="section-header">
+                        <h2>Approved Verifications</h2>
+                        <p>Successfully verified documents</p>
+                    </div>
+                    
+                    <div class="verifications-list" id="approvedVerifications">
+                        <!-- Approved items will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Rejected Section -->
+                <section id="rejected" class="content-section">
+                    <div class="section-header">
+                        <h2>Rejected Verifications</h2>
+                        <p>Rejected verification requests</p>
+                    </div>
+                    
+                    <div class="verifications-list" id="rejectedVerifications">
+                        <!-- Rejected items will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="content-section">
+                    <div class="section-header">
+                        <h2>Admin Settings</h2>
+                        <p>Configure admin panel settings</p>
+                    </div>
+                    
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Auto-refresh interval (seconds)</label>
+                            <input type="number" id="refreshInterval" value="30" min="10" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Notifications</label>
+                            <div class="checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="emailNotifications" checked>
+                                    Email notifications for new verifications
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Document Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Review Verification Request</h3>
+                <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="user-info">
+                    <h4>User Information</h4>
+                    <div class="user-details">
+                        <p><strong>Name:</strong> <span id="reviewUserName"></span></p>
+                        <p><strong>Email:</strong> <span id="reviewUserEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="reviewUserPhone"></span></p>
+                        <p><strong>Submitted:</strong> <span id="reviewSubmitDate"></span></p>
+                    </div>
+                </div>
+
+                <div class="documents-section">
+                    <h4>Submitted Documents</h4>
+                    <div class="document-grid" id="documentGrid">
+                        <!-- Documents will be populated here -->
+                    </div>
+                </div>
+
+                <div class="review-form">
+                    <h4>Review Decision</h4>
+                    <div class="form-group">
+                        <label for="reviewComments">Comments (Optional)</label>
+                        <textarea id="reviewComments" rows="3" placeholder="Add any comments about the verification..."></textarea>
+                    </div>
+                    <div class="review-actions">
+                        <button class="btn btn-success" onclick="approveVerification()">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-danger" onclick="rejectVerification()">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin-script.js"></script>
+</body>
+</html>

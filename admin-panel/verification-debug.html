@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Data Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .user-data {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .missing-data {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .found-data {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Verification Data Debug</h1>
+        <p>This will help us understand why your verification data isn't showing properly in the admin panel.</p>
+        
+        <div class="section">
+            <h3>Step 1: Check Your User Data</h3>
+            <button class="btn btn-primary" onclick="checkUserData()">Check User PJrfn2 Data</button>
+            <button class="btn btn-info" onclick="checkAllUsers()">Check All Users</button>
+            <div id="userDataResults"></div>
+        </div>
+        
+        <div class="section">
+            <h3>Step 2: Check Verification Process</h3>
+            <button class="btn btn-warning" onclick="checkVerificationProcess()">Check Verification Flow</button>
+            <div id="verificationResults"></div>
+        </div>
+        
+        <div class="section">
+            <h3>Step 3: Test API Endpoints</h3>
+            <button class="btn btn-success" onclick="testAPIEndpoints()">Test All API Endpoints</button>
+            <div id="apiTestResults"></div>
+        </div>
+        
+        <div class="section">
+            <h3>Step 4: Recommendations</h3>
+            <div id="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    adminToken = data.token;
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Login failed:', error);
+                return false;
+            }
+        }
+        
+        async function checkUserData() {
+            const results = document.getElementById('userDataResults');
+            results.innerHTML = '<p>🔍 Checking User PJrfn2 data...</p>';
+            
+            if (!adminToken && !(await login())) {
+                results.innerHTML = '<p class="missing-data">❌ Failed to login</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const data = await response.json();
+                const users = data.verifications || [];
+                
+                // Find User PJrfn2
+                const targetUser = users.find(user => {
+                    const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    return userName.includes('PJrfn2') || user.email.includes('PJrfn2');
+                });
+                
+                if (targetUser) {
+                    const userName = targetUser.name || targetUser.fullName || `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || 'Unknown User';
+                    
+                    results.innerHTML = `
+                        <div class="found-data">
+                            <h4>✅ Found User PJrfn2</h4>
+                            <div class="user-data">
+                                <p><strong>Name:</strong> ${userName}</p>
+                                <p><strong>Email:</strong> ${targetUser.email}</p>
+                                <p><strong>Phone:</strong> ${targetUser.phone || 'Not provided'}</p>
+                                <p><strong>Status:</strong> <span class="status-badge status-${targetUser.verificationStatus}">${targetUser.verificationStatus}</span></p>
+                                <p><strong>isVerified:</strong> ${targetUser.isVerified}</p>
+                                <p><strong>Created:</strong> ${new Date(targetUser.createdAt).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        
+                        <h4>📋 Verification Data Check:</h4>
+                        <div class="user-data">
+                            <p><strong>Documents Object:</strong> ${targetUser.documents ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Profile Photo:</strong> ${targetUser.documents?.profilePhoto || targetUser.profilePhoto ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Aadhar Front:</strong> ${targetUser.documents?.aadharFront || targetUser.aadharFront ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Aadhar Back:</strong> ${targetUser.documents?.aadharBack || targetUser.aadharBack ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>PAN Card:</strong> ${targetUser.documents?.panCard || targetUser.panCard ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Driving License Front:</strong> ${targetUser.documents?.drivingLicenseFront || targetUser.drivingLicenseFront ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Driving License Back:</strong> ${targetUser.documents?.drivingLicenseBack || targetUser.drivingLicenseBack ? '✅ Present' : '❌ Missing'}</p>
+                        </div>
+                        
+                        <h4>🔍 Raw User Data:</h4>
+                        <pre>${JSON.stringify(targetUser, null, 2)}</pre>
+                    `;
+                } else {
+                    results.innerHTML = '<p class="missing-data">❌ User PJrfn2 not found in the system</p>';
+                }
+            } catch (error) {
+                results.innerHTML = `<p class="missing-data">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function checkAllUsers() {
+            const results = document.getElementById('userDataResults');
+            results.innerHTML = '<p>🔍 Checking all users...</p>';
+            
+            if (!adminToken && !(await login())) {
+                results.innerHTML = '<p class="missing-data">❌ Failed to login</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const data = await response.json();
+                const users = data.verifications || [];
+                
+                let html = `<h4>📊 All Users (${users.length})</h4>`;
+                
+                users.forEach((user, index) => {
+                    const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    const hasDocuments = user.documents || user.profilePhoto || user.aadharFront || user.panCard || user.drivingLicenseFront;
+                    
+                    html += `
+                        <div class="user-data">
+                            <p><strong>${index + 1}. ${userName}</strong></p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>Status:</strong> <span class="status-badge status-${user.verificationStatus}">${user.verificationStatus}</span></p>
+                            <p><strong>Documents:</strong> ${hasDocuments ? '✅ Present' : '❌ Missing'}</p>
+                            <p><strong>Created:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                });
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="missing-data">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function checkVerificationProcess() {
+            const results = document.getElementById('verificationResults');
+            results.innerHTML = '<p>🔍 Checking verification process...</p>';
+            
+            if (!adminToken && !(await login())) {
+                results.innerHTML = '<p class="missing-data">❌ Failed to login</p>';
+                return;
+            }
+            
+            try {
+                // Check if verification form data is being stored
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const data = await response.json();
+                const users = data.verifications || [];
+                
+                let html = '<h4>🔍 Verification Process Analysis:</h4>';
+                
+                // Check for users with verification data
+                const usersWithData = users.filter(user => {
+                    return user.documents || user.profilePhoto || user.aadharFront || user.panCard || user.drivingLicenseFront;
+                });
+                
+                const usersWithoutData = users.filter(user => {
+                    return !user.documents && !user.profilePhoto && !user.aadharFront && !user.panCard && !user.drivingLicenseFront;
+                });
+                
+                html += `
+                    <div class="found-data">
+                        <p><strong>Users with verification data:</strong> ${usersWithData.length}</p>
+                        <p><strong>Users without verification data:</strong> ${usersWithoutData.length}</p>
+                    </div>
+                `;
+                
+                if (usersWithoutData.length > 0) {
+                    html += '<h5>⚠️ Users Missing Verification Data:</h5>';
+                    usersWithoutData.forEach(user => {
+                        const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                        html += `<p>• ${userName} (${user.email})</p>`;
+                    });
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="missing-data">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAPIEndpoints() {
+            const results = document.getElementById('apiTestResults');
+            results.innerHTML = '<p>🔍 Testing API endpoints...</p>';
+            
+            if (!adminToken && !(await login())) {
+                results.innerHTML = '<p class="missing-data">❌ Failed to login</p>';
+                return;
+            }
+            
+            let html = '<h4>🔍 API Endpoint Tests:</h4>';
+            
+            try {
+                // Test 1: Get all users
+                const usersResponse = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                html += `<p>✅ Get all users: ${usersResponse.status}</p>`;
+                
+                // Test 2: Get specific user (if we have a user ID)
+                const usersData = await usersResponse.json();
+                const users = usersData.verifications || [];
+                
+                if (users.length > 0) {
+                    const firstUser = users[0];
+                    const userResponse = await fetch(`http://localhost:5000/api/admin/users/${firstUser._id}`, {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                    html += `<p>✅ Get specific user: ${userResponse.status}</p>`;
+                }
+                
+                // Test 3: Check if verification endpoints exist
+                try {
+                    const verificationResponse = await fetch('http://localhost:5000/api/verifications', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                    html += `<p>✅ Verifications endpoint: ${verificationResponse.status}</p>`;
+                } catch (error) {
+                    html += `<p>❌ Verifications endpoint: Not found</p>`;
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="missing-data">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-run recommendations
+        window.addEventListener('load', function() {
+            const recommendations = document.getElementById('recommendations');
+            recommendations.innerHTML = `
+                <h4>💡 Recommendations:</h4>
+                <div class="user-data">
+                    <p><strong>1. Debug First:</strong> Use the debug tools above to check your data</p>
+                    <p><strong>2. Check Verification Form:</strong> Make sure the verification form is properly saving data</p>
+                    <p><strong>3. Check Database:</strong> Verify that documents are being stored in the correct fields</p>
+                    <p><strong>4. Test with New User:</strong> If debugging doesn't help, try with a different phone number</p>
+                    <p><strong>5. Check Backend Logs:</strong> Look for any errors in your main app's server logs</p>
+                </div>
+                
+                <h4>🚀 Next Steps:</h4>
+                <div class="user-data">
+                    <p>1. Click "Check User PJrfn2 Data" to see what's stored</p>
+                    <p>2. Click "Check Verification Process" to see if data is being saved</p>
+                    <p>3. If no data is found, the issue is in the verification form or backend</p>
+                    <p>4. If data exists but admin panel doesn't show it, the issue is in the admin panel</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

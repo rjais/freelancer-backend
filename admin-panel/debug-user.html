@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug User Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .user-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .status-approved {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .status-pending {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .status-rejected {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Debug User Data</h1>
+        <p>This page will help us check the user "User PJrfn2" and see why they're showing as approved.</p>
+        
+        <div>
+            <button class="btn btn-primary" onclick="loginAndCheckUsers()">Login & Check All Users</button>
+            <button class="btn btn-warning" onclick="findSpecificUser()">Find User PJrfn2</button>
+            <button class="btn btn-success" onclick="resetUserStatus()">Reset User to Pending</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        
+        async function loginAndCheckUsers() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Logging in...</p>';
+            
+            try {
+                // Login
+                const loginResponse = await fetch('http://localhost:5000/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (loginData.success) {
+                    adminToken = loginData.token;
+                    results.innerHTML = '<p>✅ Login successful. Fetching users...</p>';
+                    
+                    // Get all users
+                    const usersResponse = await fetch('http://localhost:5000/api/admin/users', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                    
+                    const usersData = await usersResponse.json();
+                    const users = usersData.verifications || [];
+                    
+                    results.innerHTML = `
+                        <h3>All Users (${users.length})</h3>
+                        ${users.map(user => {
+                            const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                            const statusClass = `status-${user.verificationStatus}`;
+                            return `
+                                <div class="user-data ${statusClass}">
+                                    <h4>${userName}</h4>
+                                    <p><strong>ID:</strong> ${user._id}</p>
+                                    <p><strong>Email:</strong> ${user.email}</p>
+                                    <p><strong>Status:</strong> ${user.verificationStatus}</p>
+                                    <p><strong>isVerified:</strong> ${user.isVerified}</p>
+                                    <p><strong>Created:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+                                    ${user.verifiedAt ? `<p><strong>Verified At:</strong> ${new Date(user.verifiedAt).toLocaleString()}</p>` : ''}
+                                    ${user.rejectedAt ? `<p><strong>Rejected At:</strong> ${new Date(user.rejectedAt).toLocaleString()}</p>` : ''}
+                                    ${user.adminComments ? `<p><strong>Admin Comments:</strong> ${user.adminComments}</p>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    `;
+                    
+                } else {
+                    results.innerHTML = '<p>❌ Login failed: ' + loginData.message + '</p>';
+                }
+            } catch (error) {
+                results.innerHTML = '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        async function findSpecificUser() {
+            if (!adminToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Searching for User PJrfn2...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const data = await response.json();
+                const users = data.verifications || [];
+                
+                // Find the specific user
+                const targetUser = users.find(user => {
+                    const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    return userName.includes('PJrfn2') || user.email.includes('PJrfn2');
+                });
+                
+                if (targetUser) {
+                    const userName = targetUser.name || targetUser.fullName || `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || 'Unknown User';
+                    const statusClass = `status-${targetUser.verificationStatus}`;
+                    
+                    results.innerHTML = `
+                        <h3>Found User PJrfn2</h3>
+                        <div class="user-data ${statusClass}">
+                            <h4>${userName}</h4>
+                            <p><strong>ID:</strong> ${targetUser._id}</p>
+                            <p><strong>Email:</strong> ${targetUser.email}</p>
+                            <p><strong>Status:</strong> ${targetUser.verificationStatus}</p>
+                            <p><strong>isVerified:</strong> ${targetUser.isVerified}</p>
+                            <p><strong>Created:</strong> ${new Date(targetUser.createdAt).toLocaleString()}</p>
+                            ${targetUser.verifiedAt ? `<p><strong>Verified At:</strong> ${new Date(targetUser.verifiedAt).toLocaleString()}</p>` : ''}
+                            ${targetUser.rejectedAt ? `<p><strong>Rejected At:</strong> ${new Date(targetUser.rejectedAt).toLocaleString()}</p>` : ''}
+                            ${targetUser.adminComments ? `<p><strong>Admin Comments:</strong> ${targetUser.adminComments}</p>` : ''}
+                        </div>
+                        <h4>Raw User Data:</h4>
+                        <pre>${JSON.stringify(targetUser, null, 2)}</pre>
+                    `;
+                } else {
+                    results.innerHTML = '<p>❌ User PJrfn2 not found</p>';
+                }
+            } catch (error) {
+                results.innerHTML = '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        async function resetUserStatus() {
+            if (!adminToken) {
+                alert('Please login first');
+                return;
+            }
+            
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Finding and resetting User PJrfn2...</p>';
+            
+            try {
+                // First find the user
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const data = await response.json();
+                const users = data.verifications || [];
+                
+                const targetUser = users.find(user => {
+                    const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    return userName.includes('PJrfn2') || user.email.includes('PJrfn2');
+                });
+                
+                if (targetUser) {
+                    // Reset to pending
+                    const resetResponse = await fetch(`http://localhost:5000/api/admin/users/${targetUser._id}/verification-status`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify({
+                            isVerified: false,
+                            verificationStatus: 'pending',
+                            adminComments: 'Reset to pending by admin'
+                        })
+                    });
+                    
+                    if (resetResponse.ok) {
+                        results.innerHTML = `
+                            <p>✅ Successfully reset User PJrfn2 to pending status</p>
+                            <button class="btn btn-primary" onclick="loginAndCheckUsers()">Refresh User List</button>
+                        `;
+                    } else {
+                        const errorData = await resetResponse.json();
+                        results.innerHTML = '<p>❌ Failed to reset user: ' + (errorData.message || 'Unknown error') + '</p>';
+                    }
+                } else {
+                    results.innerHTML = '<p>❌ User PJrfn2 not found</p>';
+                }
+            } catch (error) {
+                results.innerHTML = '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

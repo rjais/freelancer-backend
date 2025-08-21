@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Test</title>
+</head>
+<body>
+    <h1>Admin Panel Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Test the API endpoints directly
+        async function testAPI() {
+            const results = document.getElementById('test-results');
+            
+            try {
+                // Test 1: Admin Login
+                console.log('Testing admin login...');
+                const loginResponse = await fetch('http://localhost:5000/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const loginData = await loginResponse.json();
+                console.log('Login response:', loginData);
+                
+                if (loginData.success) {
+                    const token = loginData.token;
+                    
+                    // Test 2: Get Users
+                    console.log('Testing get users...');
+                    const usersResponse = await fetch('http://localhost:5000/api/admin/users?verificationStatus=pending', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const usersData = await usersResponse.json();
+                    console.log('Users response:', usersData);
+                    
+                    results.innerHTML = `
+                        <h2>Test Results:</h2>
+                        <p><strong>Login:</strong> ${loginResponse.ok ? 'SUCCESS' : 'FAILED'}</p>
+                        <p><strong>Token:</strong> ${token}</p>
+                        <p><strong>Get Users:</strong> ${usersResponse.ok ? 'SUCCESS' : 'FAILED'}</p>
+                        <p><strong>Pending Users:</strong> ${usersData.verifications ? usersData.verifications.length : 0}</p>
+                        <pre>${JSON.stringify(usersData, null, 2)}</pre>
+                    `;
+                } else {
+                    results.innerHTML = '<p>Login failed</p>';
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+                results.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        testAPI();
+    </script>
+</body>
+</html>

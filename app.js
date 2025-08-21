@@ -54,9 +54,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/documents', express.static(path.join(__dirname, 'public/documents')));
 
 // Serve admin panel
-app.use('/admin-panel', express.static(path.join(__dirname, 'admin')));
+app.use('/admin-panel', express.static(path.join(__dirname, 'admin-panel')));
 app.get('/admin-panel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+    res.sendFile(path.join(__dirname, 'admin-panel', 'index.html'));
 });
 
 app.use('/', indexRouter);
