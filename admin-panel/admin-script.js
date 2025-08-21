@@ -804,28 +804,36 @@ function loadUserDocumentsInModal(user) {
     // Display documents
     documents.forEach(doc => {
         console.log('Processing document:', doc);
-        const documentItem = document.createElement('div');
-        documentItem.className = 'document-item';
-        
-        // Add error handling for image loading
-        const img = document.createElement('img');
-        img.alt = `${doc.type} ${doc.side}`;
-        img.onclick = () => openImageModal(doc.url, `${doc.type} ${doc.side}`);
-        img.onerror = () => {
-            console.error('Failed to load image:', doc.url);
-            img.style.display = 'none';
-            documentItem.innerHTML = `
-                <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;">
-                    <p style="color: #666; margin: 0;">Image not accessible</p>
-                    <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">${doc.url}</p>
-                </div>
-                <p>${doc.type} - ${doc.side}</p>
-            `;
-        };
-        img.onload = () => {
-            console.log('Successfully loaded image:', doc.url);
-        };
-        img.src = fixDocumentUrl(doc.url);
+            const documentItem = document.createElement('div');
+            documentItem.className = 'document-item';
+            
+            // Add error handling for image loading
+            const img = document.createElement('img');
+            img.alt = `${doc.type} ${doc.side}`;
+            img.onclick = () => openImageModal(doc.url, `${doc.type} ${doc.side}`);
+            
+            const fixedUrl = fixDocumentUrl(doc.url);
+            console.log('Original URL:', doc.url);
+            console.log('Fixed URL:', fixedUrl);
+            
+            img.onerror = () => {
+                console.error('Failed to load image:', doc.url);
+                console.error('Fixed URL that failed:', fixedUrl);
+                img.style.display = 'none';
+                documentItem.innerHTML = `
+                    <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;">
+                        <p style="color: #666; margin: 0;">Image not accessible</p>
+                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Original: ${doc.url}</p>
+                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Fixed: ${fixedUrl}</p>
+                    </div>
+                    <p>${doc.type} - ${doc.side}</p>
+                `;
+            };
+            img.onload = () => {
+                console.log('Successfully loaded image:', doc.url);
+                console.log('Successfully loaded image with fixed URL:', fixedUrl);
+            };
+            img.src = fixedUrl;
         
         documentItem.appendChild(img);
         
