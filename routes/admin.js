@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/adminController');
-const auth = require('../middleware/auth');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+
+// Test route to check if admin routes are working
+router.get('/test', (req, res) => {
+    res.json({ message: 'Admin routes are working' });
+});
 
 // Update your existing admin middleware to handle Firebase tokens
 const authenticateAdmin = (req, res, next) => {
@@ -121,22 +123,26 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete User Endpoint
-router.delete('/delete-user/:id', authenticateAdmin, async (req, res) => {
+router.post('/delete-user/:id', authenticateAdmin, async (req, res) => {
+    console.log('POST /delete-user/:id called with ID:', req.params.id);
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         
         if (!user) {
+            console.log('User not found for deletion:', req.params.id);
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
         
+        console.log('User deleted successfully:', req.params.id);
         res.json({
             success: true,
             message: 'User deleted successfully'
         });
     } catch (error) {
+        console.error('Error deleting user:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to delete user',
@@ -148,8 +154,26 @@ router.delete('/delete-user/:id', authenticateAdmin, async (req, res) => {
 // Update Verification Status Endpoint (adapted for User model)
 router.patch('/users/:id/verification-status', authenticateAdmin, async (req, res) => {
     try {
-        const { isVerified, verificationStatus, verifiedAt, rejectedAt, adminComments } = req.body;
+        const { isVerified, verificationStatus, verifiedAt, rejectedAt, adminComments, action } = req.body;
         
+        // Handle delete action
+        if (action === 'delete') {
+            const user = await User.findByIdAndDelete(req.params.id);
+            
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+            
+            return res.json({
+                success: true,
+                message: 'User deleted successfully'
+            });
+        }
+        
+        // Handle verification status update
         const updateData = {
             isVerified,
             verificationStatus,
@@ -187,24 +211,6 @@ router.patch('/users/:id/verification-status', authenticateAdmin, async (req, re
     }
 });
 
-// Keep existing routes
-router.post('/logout', auth.verifyAdmin, adminController.logout);
-router.get('/verify-token', auth.verifyAdmin, adminController.verifyToken);
-
-// Dashboard routes
-router.get('/dashboard/stats', auth.verifyAdmin, adminController.getDashboardStats);
-
-// Verification routes (existing)
-router.get('/verifications', auth.verifyAdmin, adminController.getAllVerifications);
-router.get('/verifications/pending', auth.verifyAdmin, adminController.getPendingVerifications);
-router.get('/verifications/approved', auth.verifyAdmin, adminController.getApprovedVerifications);
-router.get('/verifications/rejected', auth.verifyAdmin, adminController.getRejectedVerifications);
-router.get('/verifications/:id', auth.verifyAdmin, adminController.getVerificationById);
-router.post('/verifications/:id/approve', auth.verifyAdmin, adminController.approveVerification);
-router.post('/verifications/:id/reject', auth.verifyAdmin, adminController.rejectVerification);
-
-// File upload routes
-router.post('/upload/document', auth.verifyAdmin, adminController.uploadDocument);
-router.get('/documents/:id', auth.verifyAdmin, adminController.getDocument);
+// Additional routes can be added here as needed
 
 module.exports = router;

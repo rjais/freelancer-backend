@@ -919,9 +919,13 @@
             }
             
             try {
-                const response = await fetch(`http://localhost:5000/api/admin/delete-user/${userId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/verification-status`, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'delete' })
                 });
                 
                 if (response.ok) {
