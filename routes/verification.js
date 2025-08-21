@@ -33,6 +33,25 @@ async function firebaseAuth(req, res, next) {
   }
 }
 
+// GET /api/verifications/debug - Debug endpoint to check stored data
+router.get('/debug', async (req, res) => {
+    try {
+        const users = await User.find({}).select('name email phone verificationStatus isVerified documents address city state pincode dateOfBirth gender');
+        res.json({
+            success: true,
+            count: users.length,
+            users: users
+        });
+    } catch (error) {
+        console.error('Debug endpoint error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch debug data',
+            error: error.message
+        });
+    }
+});
+
 // POST /api/verifications - Submit verification (without Firebase auth for testing)
 router.post('/submit', async (req, res) => {
     try {
