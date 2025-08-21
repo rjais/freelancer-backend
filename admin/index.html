@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People App - Admin Panel</title>
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="login-screen" class="screen">
+            <div class="login-container">
+                <h1>Admin Panel</h1>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="dashboard-screen" class="screen hidden">
+            <header class="header">
+                <h1>Admin Dashboard</h1>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </header>
+
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Users</h3>
+                        <p id="total-users">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Verifications</h3>
+                        <p id="pending-verifications">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Approved Verifications</h3>
+                        <p id="approved-verifications">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Rejected Verifications</h3>
+                        <p id="rejected-verifications">0</p>
+                    </div>
+                </div>
+
+                <div class="verifications-section">
+                    <h2>Verification Requests</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="pending">Pending</button>
+                        <button class="tab-btn" data-tab="approved">Approved</button>
+                        <button class="tab-btn" data-tab="rejected">Rejected</button>
+                    </div>
+                    <div id="verifications-list" class="verifications-list">
+                        <!-- Verifications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin-script.js"></script>
+</body>
+</html>
