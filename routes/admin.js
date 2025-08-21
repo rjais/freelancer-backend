@@ -121,7 +121,7 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete User Endpoint
-router.delete('/users/:id', authenticateAdmin, async (req, res) => {
+router.delete('/delete-user/:id', authenticateAdmin, async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         
