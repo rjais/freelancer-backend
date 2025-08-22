@@ -145,7 +145,8 @@ router.post('/firebase', async (req, res) => {
             if (user) {
               console.log('✅ Found existing user after duplicate error:', user._id);
             } else {
-              throw new Error('Failed to create or find user with this phone number');
+              console.log('❌ User not found after duplicate phone error - phone:', phone_number);
+              throw new Error('Failed to create or find user with this phone number - duplicate phone but user not found');
             }
           } else if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
             // Duplicate Firebase UID - find user by phone instead
@@ -157,7 +158,8 @@ router.post('/firebase', async (req, res) => {
               user.firebaseUid = uid;
               await user.save();
             } else {
-              throw new Error('Failed to create or find user with this phone number');
+              console.log('❌ User not found after duplicate Firebase UID error - phone:', phone_number);
+              throw new Error('Failed to create or find user with this phone number - duplicate Firebase UID but user not found');
             }
           } else if (saveError.keyPattern && saveError.keyPattern.email) {
             // Duplicate email - find user by phone instead
@@ -169,7 +171,8 @@ router.post('/firebase', async (req, res) => {
               user.email = `${phone_number.replace(/[^0-9]/g, '')}_${Date.now()}@user.com`;
               await user.save();
             } else {
-              throw new Error('Failed to create or find user with this phone number');
+              console.log('❌ User not found after duplicate email error - phone:', phone_number);
+              throw new Error('Failed to create or find user with this phone number - duplicate email but user not found');
             }
           } else {
             throw saveError;
