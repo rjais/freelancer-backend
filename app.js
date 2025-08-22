@@ -77,6 +77,10 @@ app.get('/admin-panel/test-freelancer-id.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'test-freelancer-id.html'));
 });
 
+app.get('/admin-panel/database-debug.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel', 'database-debug.html'));
+});
+
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);
