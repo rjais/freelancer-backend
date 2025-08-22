@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, default: undefined }, // Make email optional without unique constraint
+  // Email field removed to avoid unique constraint issues - will be added by user during profile completion
   password: { type: String }, // Make password optional for Firebase users
   firebaseUid: { type: String, unique: true, sparse: true }, // Add Firebase UID
   role: { type: String, enum: ['client', 'freelancer'], required: true },
