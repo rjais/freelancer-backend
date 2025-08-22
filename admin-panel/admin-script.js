@@ -704,7 +704,7 @@ function loadUserDocumentsInModal(user) {
     
     // Add profile photo if available
     if (user.profileImage || user.profilePhoto) {
-        const profileUrl = fixDocumentUrl(user.profileImage || user.profilePhoto);
+        const profileUrl = user.profileImage || user.profilePhoto;
         documents.push({
             type: 'Profile Photo',
             url: profileUrl,
@@ -719,14 +719,14 @@ function loadUserDocumentsInModal(user) {
             if (user.documents.aadhaar.front) {
                 documents.push({
                     type: 'Aadhar Card',
-                    url: fixDocumentUrl(user.documents.aadhaar.front),
+                    url: user.documents.aadhaar.front,
                     side: 'Front'
                 });
             }
             if (user.documents.aadhaar.back) {
                 documents.push({
                     type: 'Aadhar Card',
-                    url: fixDocumentUrl(user.documents.aadhaar.back),
+                    url: user.documents.aadhaar.back,
                     side: 'Back'
                 });
             }
@@ -736,7 +736,7 @@ function loadUserDocumentsInModal(user) {
         if (user.documents.pan && user.documents.pan.front) {
             documents.push({
                 type: 'PAN Card',
-                url: fixDocumentUrl(user.documents.pan.front),
+                url: user.documents.pan.front,
                 side: 'Front'
             });
         }
@@ -746,14 +746,14 @@ function loadUserDocumentsInModal(user) {
             if (user.documents.drivingLicense.front) {
                 documents.push({
                     type: 'Driving License',
-                    url: fixDocumentUrl(user.documents.drivingLicense.front),
+                    url: user.documents.drivingLicense.front,
                     side: 'Front'
                 });
             }
             if (user.documents.drivingLicense.back) {
                 documents.push({
                     type: 'Driving License',
-                    url: fixDocumentUrl(user.documents.drivingLicense.back),
+                    url: user.documents.drivingLicense.back,
                     side: 'Back'
                 });
             }
@@ -764,7 +764,7 @@ function loadUserDocumentsInModal(user) {
     if (user.aadharFront) {
         documents.push({
             type: 'Aadhar Card',
-            url: fixDocumentUrl(user.aadharFront),
+            url: user.aadharFront,
             side: 'Front'
         });
     }
@@ -772,7 +772,7 @@ function loadUserDocumentsInModal(user) {
     if (user.aadharBack) {
         documents.push({
             type: 'Aadhar Card',
-            url: fixDocumentUrl(user.aadharBack),
+            url: user.aadharBack,
             side: 'Back'
         });
     }
@@ -780,7 +780,7 @@ function loadUserDocumentsInModal(user) {
     if (user.panCard) {
         documents.push({
             type: 'PAN Card',
-            url: fixDocumentUrl(user.panCard),
+            url: user.panCard,
             side: 'Front'
         });
     }
@@ -788,7 +788,7 @@ function loadUserDocumentsInModal(user) {
     if (user.drivingLicenseFront) {
         documents.push({
             type: 'Driving License',
-            url: fixDocumentUrl(user.drivingLicenseFront),
+            url: user.drivingLicenseFront,
             side: 'Front'
         });
     }
@@ -796,7 +796,7 @@ function loadUserDocumentsInModal(user) {
     if (user.drivingLicenseBack) {
         documents.push({
             type: 'Driving License',
-            url: fixDocumentUrl(user.drivingLicenseBack),
+            url: user.drivingLicenseBack,
             side: 'Back'
         });
     }
