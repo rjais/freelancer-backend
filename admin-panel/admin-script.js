@@ -1309,3 +1309,46 @@ document.addEventListener('visibilitychange', () => {
         startAutoRefresh();
     }
 });
+
+// Freelancer ID Assignment Function
+async function assignFreelancerId() {
+    try {
+        const button = document.getElementById('assignFreelancerIdBtn');
+        const originalText = button.innerHTML;
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assigning...';
+        
+        const response = await fetch(`${API}/admin/assign-freelancer-id`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`✅ ${data.message}`, 'success');
+            if (data.user) {
+                showNotification(`User: ${data.user.name} | ID: ${data.user.freelancerId}`, 'success');
+            }
+        } else {
+            showNotification(`❌ ${data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Assign freelancer ID error:', error);
+        showNotification('❌ Failed to assign freelancer ID', 'error');
+    } finally {
+        const button = document.getElementById('assignFreelancerIdBtn');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-id-card"></i> Assign Freelancer ID';
+    }
+}
+
+// Add event listener for the assign freelancer ID button
+document.addEventListener('DOMContentLoaded', function() {
+    const assignButton = document.getElementById('assignFreelancerIdBtn');
+    if (assignButton) {
+        assignButton.addEventListener('click', assignFreelancerId);
+    }
+});
