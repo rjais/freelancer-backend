@@ -400,7 +400,7 @@
             
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/delete-user/${userId}`, {
-                    method: 'DELETE',
+                    method: 'GET',
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
@@ -475,7 +475,7 @@
                         log('fixResults', `Deleting user: ${user.name} (${user.phone})`, 'warning');
                         
                         const deleteResponse = await fetch(`${API_BASE_URL}/admin/delete-user/${user._id}`, {
-                            method: 'DELETE',
+                            method: 'GET',
                             headers: { 'Authorization': `Bearer ${adminToken}` }
                         });
                         
@@ -546,7 +546,7 @@
                         log('fixResults', `Deleting user: ${user.name} (${user.phone})`, 'warning');
                         
                         const deleteResponse = await fetch(`${API_BASE_URL}/admin/delete-user/${user._id}`, {
-                            method: 'DELETE',
+                            method: 'GET',
                             headers: { 'Authorization': `Bearer ${adminToken}` }
                         });
                         
