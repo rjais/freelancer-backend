@@ -696,8 +696,14 @@ function loadUserDocumentsInModal(user) {
     const documentGrid = document.getElementById('documentGrid');
     documentGrid.innerHTML = '';
     
-    console.log('Loading documents for user:', user);
+    console.log('=== LOADING USER DOCUMENTS ===');
+    console.log('User object:', user);
+    console.log('User ID:', user._id);
+    console.log('User name:', user.name);
+    console.log('User phone:', user.phone);
+    console.log('Profile image:', user.profileImage);
     console.log('User documents structure:', user.documents);
+    console.log('Documents JSON:', JSON.stringify(user.documents, null, 2));
     
     // Display user's uploaded documents based on your app's structure
     const documents = [];
@@ -813,22 +819,32 @@ function loadUserDocumentsInModal(user) {
             img.onclick = () => openImageModal(doc.url, `${doc.type} ${doc.side}`);
             
             console.log('Document URL:', doc.url);
+            console.log('Document type:', doc.type);
+            console.log('Document side:', doc.side);
             
-            img.onerror = () => {
+            // Add cache-busting parameter to force fresh load
+            const imageUrl = doc.url + (doc.url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+            console.log('Final image URL with cache busting:', imageUrl);
+            
+            img.onerror = (error) => {
                 console.error('Failed to load image:', doc.url);
+                console.error('Error details:', error);
+                console.error('Image element:', img);
                 img.style.display = 'none';
                 documentItem.innerHTML = `
                     <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;">
                         <p style="color: #666; margin: 0;">Image not accessible</p>
                         <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">URL: ${doc.url}</p>
+                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Final URL: ${imageUrl}</p>
                     </div>
                     <p>${doc.type} - ${doc.side}</p>
                 `;
             };
             img.onload = () => {
                 console.log('Successfully loaded image:', doc.url);
+                console.log('Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
             };
-            img.src = doc.url;
+            img.src = imageUrl;
         
         documentItem.appendChild(img);
         
