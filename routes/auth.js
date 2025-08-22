@@ -108,7 +108,7 @@ router.post('/firebase', async (req, res) => {
     if (!user) {
       // Create new user if doesn't exist
       try {
-        user = new User({
+        const userData = {
           firebaseUid: uid,
           phone: phone_number,
           role: role,
@@ -117,7 +117,10 @@ router.post('/firebase', async (req, res) => {
           isVerified: false,
           verificationStatus: 'pending',
           verificationMethod: 'pending' // Set verification method to pending
-        });
+        };
+        
+        console.log('Creating user with data:', userData);
+        user = new User(userData);
         await user.save();
         isNewUser = true;
         console.log('✅ Created NEW user:', user._id, 'Phone:', phone_number, 'Role:', role);
@@ -126,7 +129,9 @@ router.post('/firebase', async (req, res) => {
           code: saveError.code,
           keyPattern: saveError.keyPattern,
           message: saveError.message,
-          errors: saveError.errors
+          errors: saveError.errors,
+          name: saveError.name,
+          stack: saveError.stack
         });
         
         if (saveError.code === 11000) {
