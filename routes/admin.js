@@ -178,6 +178,69 @@ router.get('/delete-user/:id', authenticateAdmin, async (req, res) => {
     await adminController.deleteUser(req, res);
 });
 
+// Temporary endpoint to assign freelancer ID to verified users
+router.get('/assign-freelancer-id', authenticateAdmin, async (req, res) => {
+  try {
+    const adminController = require('../controllers/adminController');
+    
+    // Find the most recently verified freelancer without a freelancerId
+    const user = await User.findOne({ 
+      role: 'freelancer', 
+      isVerified: true,
+      freelancerId: { $exists: false }
+    }).sort({ verifiedAt: -1 });
+    
+    if (!user) {
+      // Check if any verified freelancer exists
+      const verifiedUser = await User.findOne({ 
+        role: 'freelancer', 
+        isVerified: true 
+      }).sort({ verifiedAt: -1 });
+      
+      if (verifiedUser) {
+        return res.json({
+          success: true,
+          message: 'User already has freelancerId',
+          user: {
+            name: verifiedUser.name,
+            phone: verifiedUser.phone,
+            freelancerId: verifiedUser.freelancerId
+          }
+        });
+      } else {
+        return res.json({
+          success: false,
+          message: 'No verified freelancers found'
+        });
+      }
+    }
+    
+    // Generate and assign freelancer ID
+    const freelancerId = await adminController.generateFreelancerId();
+    
+    // Update the user
+    await User.findByIdAndUpdate(user._id, {
+      freelancerId: freelancerId
+    });
+    
+    res.json({
+      success: true,
+      message: 'Freelancer ID assigned successfully',
+      user: {
+        name: user.name,
+        phone: user.phone,
+        freelancerId: freelancerId
+      }
+    });
+  } catch (error) {
+    console.error('Assign freelancer ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to assign freelancer ID'
+    });
+  }
+});
+
 // Document proxy endpoint to handle file:// URLs
 router.get('/document-proxy', authenticateAdmin, async (req, res) => {
     try {
