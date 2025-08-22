@@ -115,7 +115,7 @@ router.post('/firebase', async (req, res) => {
           phone: phone_number,
           role: role,
           name: `User ${phone_number.slice(-6)}`, // Generate a default name
-          // Don't generate email - let freelancer add their own during profile completion
+          email: undefined, // Explicitly set email to undefined to avoid auto-generation
           isVerified: false,
           verificationStatus: 'pending',
           verificationMethod: 'pending' // Set verification method to pending
