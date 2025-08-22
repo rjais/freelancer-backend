@@ -151,9 +151,18 @@
             </div>
         </div>
 
-        <!-- Section 3: Fetch Users and Test Their Images -->
+        <!-- Section 3: Admin Authentication -->
         <div class="section">
-            <h2>3. Fetch Users and Test Their Images</h2>
+            <h2>3. Admin Authentication</h2>
+            <div class="test-item">
+                <button onclick="authenticateAdmin()">Authenticate Admin</button>
+                <div id="auth-result"></div>
+            </div>
+        </div>
+
+        <!-- Section 4: Fetch Users and Test Their Images -->
+        <div class="section">
+            <h2>4. Fetch Users and Test Their Images</h2>
             <div class="test-item">
                 <button onclick="fetchUsers()">Fetch All Users</button>
                 <div id="users-result"></div>
@@ -161,9 +170,9 @@
             </div>
         </div>
 
-        <!-- Section 4: Test Specific User Images -->
+        <!-- Section 5: Test Specific User Images -->
         <div class="section">
-            <h2>4. Test Specific User Images</h2>
+            <h2>5. Test Specific User Images</h2>
             <div class="test-item">
                 <input type="text" id="user-id" placeholder="Enter User ID or Phone Number">
                 <button onclick="testUserImages()">Test User Images</button>
@@ -171,9 +180,9 @@
             </div>
         </div>
 
-        <!-- Section 5: Manual Image Test -->
+        <!-- Section 6: Manual Image Test -->
         <div class="section">
-            <h2>5. Manual Image Test</h2>
+            <h2>6. Manual Image Test</h2>
             <div class="test-item">
                 <input type="text" id="manual-url" placeholder="Enter any image URL to test">
                 <button onclick="testManualImage()">Test Manual Image</button>
@@ -182,9 +191,9 @@
             </div>
         </div>
 
-        <!-- Section 6: Debug Log -->
+        <!-- Section 7: Debug Log -->
         <div class="section">
-            <h2>6. Debug Log</h2>
+            <h2>7. Debug Log</h2>
             <button onclick="clearLog()">Clear Log</button>
             <div id="debug-log" class="log"></div>
         </div>
@@ -193,6 +202,43 @@
     <script>
         const API_BASE_URL = 'https://freelancer-backend-jv21.onrender.com/api';
         let selectedUser = null;
+        let adminToken = null;
+        
+        // Admin authentication
+        async function authenticateAdmin() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = '<div class="status loading">Authenticating...</div>';
+            
+            try {
+                log('Authenticating admin...');
+                const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    adminToken = data.token;
+                    log('✅ Admin authentication successful');
+                    resultDiv.innerHTML = '<div class="status success">✅ Admin authentication successful</div>';
+                    return true;
+                } else {
+                    log('❌ Admin authentication failed');
+                    resultDiv.innerHTML = '<div class="status error">❌ Admin authentication failed</div>';
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Admin authentication error: ${error.message}`);
+                resultDiv.innerHTML = `<div class="status error">❌ Authentication error: ${error.message}</div>`;
+                return false;
+            }
+        }
 
         function log(message) {
             const logDiv = document.getElementById('debug-log');
@@ -312,8 +358,21 @@
             resultDiv.innerHTML = '<div class="status loading">Fetching users...</div>';
             log('Fetching users from API...');
             
+            // Authenticate first if not already authenticated
+            if (!adminToken) {
+                const authSuccess = await authenticateAdmin();
+                if (!authSuccess) {
+                    resultDiv.innerHTML = '<div class="status error">❌ Admin authentication failed</div>';
+                    return;
+                }
+            }
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/admin/users`);
+                const response = await fetch(`${API_BASE_URL}/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
                 log(`Users API response status: ${response.status}`);
                 
                 if (response.ok) {
@@ -373,8 +432,21 @@
             resultDiv.innerHTML = '<div class="status loading">Testing user images...</div>';
             log(`Testing images for user: ${userId}`);
             
+            // Authenticate first if not already authenticated
+            if (!adminToken) {
+                const authSuccess = await authenticateAdmin();
+                if (!authSuccess) {
+                    resultDiv.innerHTML = '<div class="status error">❌ Admin authentication failed</div>';
+                    return;
+                }
+            }
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`);
+                const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
                 log(`User API response status: ${response.status}`);
                 
                 if (response.ok) {
