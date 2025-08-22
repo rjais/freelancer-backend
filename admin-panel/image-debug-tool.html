@@ -164,6 +164,10 @@
         <div class="section">
             <h2>4. Fetch Users and Test Their Images</h2>
             <div class="test-item">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+                    <input type="text" id="search-phone" placeholder="Search by phone (e.g., +9190...)" style="flex:1; min-width:260px;">
+                    <button onclick="searchByPhone()">Search by Phone</button>
+                </div>
                 <button onclick="fetchUsers()">Fetch All Users</button>
                 <div id="users-result"></div>
                 <div id="user-list" class="user-list" style="display: none;"></div>
@@ -377,14 +381,15 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    log(`Fetched ${data.users ? data.users.length : 0} users`);
+                    const users = Array.isArray(data.users) ? data.users : (Array.isArray(data.verifications) ? data.verifications : []);
+                    log(`Fetched ${users.length} users`);
                     
-                    if (data.users && data.users.length > 0) {
-                        resultDiv.innerHTML = `<div class="status success">✅ Found ${data.users.length} users</div>`;
+                    if (users.length > 0) {
+                        resultDiv.innerHTML = `<div class="status success">✅ Found ${users.length} users</div>`;
                         
                         // Display user list
                         userListDiv.innerHTML = '';
-                        data.users.forEach(user => {
+                        users.forEach(user => {
                             const userDiv = document.createElement('div');
                             userDiv.className = 'user-item';
                             userDiv.innerHTML = `
@@ -406,6 +411,57 @@
             } catch (error) {
                 resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
                 log(`❌ Users fetch error: ${error.message}`);
+            }
+        }
+
+        // Search by phone helper
+        async function searchByPhone() {
+            const phoneInput = document.getElementById('search-phone');
+            const phone = (phoneInput.value || '').trim();
+            const resultDiv = document.getElementById('users-result');
+            const userListDiv = document.getElementById('user-list');
+            if (!phone) {
+                resultDiv.innerHTML = '<div class="status error">❌ Enter a phone number</div>';
+                return;
+            }
+            
+            // Authenticate first if needed
+            if (!adminToken) {
+                const ok = await authenticateAdmin();
+                if (!ok) {
+                    resultDiv.innerHTML = '<div class="status error">❌ Admin authentication failed</div>';
+                    return;
+                }
+            }
+            
+            resultDiv.innerHTML = '<div class="status loading">Searching by phone...</div>';
+            log(`Searching user by phone: ${phone}`);
+            try {
+                const url = `${API_BASE_URL}/admin/users?phone=${encodeURIComponent(phone)}`;
+                const resp = await fetch(url, { headers: { 'Authorization': `Bearer ${adminToken}` } });
+                log(`Search API response status: ${resp.status}`);
+                const data = await resp.json();
+                if (resp.ok && data && data.user && data.user._id) {
+                    // Show a single user result and auto-fill the ID
+                    userListDiv.innerHTML = '';
+                    const user = data.user;
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user-item selected';
+                    userDiv.innerHTML = `
+                        <strong>${user.name || 'No Name'}</strong> (${user.phone || 'No Phone'})<br>
+                        <small>ID: ${user._id}</small>
+                    `;
+                    userListDiv.appendChild(userDiv);
+                    userListDiv.style.display = 'block';
+                    selectedUser = user;
+                    document.getElementById('user-id').value = user._id;
+                    resultDiv.innerHTML = '<div class="status success">✅ User found by phone</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class=\"status error\">❌ ${data && data.message ? data.message : 'User not found'}</div>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<div class=\"status error\">❌ Error: ${e.message}</div>`;
+                log(`❌ Phone search error: ${e.message}`);
             }
         }
 
