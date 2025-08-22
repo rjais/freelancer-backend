@@ -110,6 +110,7 @@ router.post('/firebase', async (req, res) => {
     if (!user) {
       // Create new user if doesn't exist
       try {
+        // Create user data without email field to avoid unique constraint issues
         const userData = {
           firebaseUid: uid,
           phone: phone_number,
@@ -118,7 +119,6 @@ router.post('/firebase', async (req, res) => {
           isVerified: false,
           verificationStatus: 'pending',
           verificationMethod: 'pending' // Set verification method to pending
-          // Email field intentionally omitted - will be added by user during profile completion
         };
         
         console.log('Creating user with data:', userData);
@@ -172,6 +172,7 @@ router.post('/firebase', async (req, res) => {
               console.log('❌ No user found - this might be a database inconsistency');
               // Instead of throwing an error, try to create the user again without any email field
               console.log('Attempting to create user again without email field');
+              // Retry user creation without email field
               const retryUserData = {
                 firebaseUid: uid,
                 phone: phone_number,
@@ -180,7 +181,6 @@ router.post('/firebase', async (req, res) => {
                 isVerified: false,
                 verificationStatus: 'pending',
                 verificationMethod: 'pending'
-                // Email field intentionally omitted
               };
               user = new User(retryUserData);
               await user.save();
