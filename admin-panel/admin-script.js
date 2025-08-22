@@ -812,28 +812,23 @@ function loadUserDocumentsInModal(user) {
             img.alt = `${doc.type} ${doc.side}`;
             img.onclick = () => openImageModal(doc.url, `${doc.type} ${doc.side}`);
             
-            const fixedUrl = fixDocumentUrl(doc.url);
-            console.log('Original URL:', doc.url);
-            console.log('Fixed URL:', fixedUrl);
+            console.log('Document URL:', doc.url);
             
             img.onerror = () => {
                 console.error('Failed to load image:', doc.url);
-                console.error('Fixed URL that failed:', fixedUrl);
                 img.style.display = 'none';
                 documentItem.innerHTML = `
                     <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 8px;">
                         <p style="color: #666; margin: 0;">Image not accessible</p>
-                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Original: ${doc.url}</p>
-                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Fixed: ${fixedUrl}</p>
+                        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">URL: ${doc.url}</p>
                     </div>
                     <p>${doc.type} - ${doc.side}</p>
                 `;
             };
             img.onload = () => {
                 console.log('Successfully loaded image:', doc.url);
-                console.log('Successfully loaded image with fixed URL:', fixedUrl);
             };
-            img.src = fixedUrl;
+            img.src = doc.url;
         
         documentItem.appendChild(img);
         
@@ -872,7 +867,7 @@ function loadUserDocumentsInModal(user) {
             • PAN Front: ${user.documents?.pan?.front ? '✅ Uploaded' : '❌ Missing'}<br>
             • Driving License Front: ${user.documents?.drivingLicense?.front ? '✅ Uploaded' : '❌ Missing'}<br>
             • Driving License Back: ${user.documents?.drivingLicense?.back ? '✅ Uploaded' : '❌ Missing'}<br>
-            <br><strong>Note:</strong> File:// URLs from mobile app cache are not accessible from web browser.
+            <br><strong>Note:</strong> Documents are now stored on Cloudinary and should be accessible.
         `;
         documentGrid.insertBefore(summaryDiv, documentGrid.firstChild);
     }
