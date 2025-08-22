@@ -161,14 +161,29 @@ router.post('/firebase', async (req, res) => {
               throw new Error('Failed to create or find user with this phone number - duplicate Firebase UID but user not found');
             }
           } else if (saveError.keyPattern && saveError.keyPattern.email) {
-            // Duplicate email - find user by phone instead
-            console.log('⚠️ Duplicate email detected, finding user by phone');
+            // Duplicate email - this shouldn't happen since we don't generate emails anymore
+            console.log('⚠️ Unexpected duplicate email error - this should not happen');
+            console.log('Attempting to find user by phone number as fallback');
             user = await User.findOne({ phone: phone_number });
             if (user) {
-              console.log('✅ Found existing user by phone after email duplicate:', user._id);
+              console.log('✅ Found existing user by phone after unexpected email duplicate:', user._id);
             } else {
-              console.log('❌ User not found after duplicate email error - phone:', phone_number);
-              throw new Error('Failed to create or find user with this phone number - duplicate email but user not found');
+              console.log('❌ No user found - this might be a database inconsistency');
+              // Instead of throwing an error, try to create the user again without any email field
+              console.log('Attempting to create user again without email field');
+              const retryUserData = {
+                firebaseUid: uid,
+                phone: phone_number,
+                role: role,
+                name: `User ${phone_number.slice(-6)}`,
+                isVerified: false,
+                verificationStatus: 'pending',
+                verificationMethod: 'pending'
+              };
+              user = new User(retryUserData);
+              await user.save();
+              isNewUser = true;
+              console.log('✅ Successfully created user on retry:', user._id);
             }
           } else {
             throw saveError;
