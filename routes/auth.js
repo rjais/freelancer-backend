@@ -118,6 +118,7 @@ router.post('/firebase', async (req, res) => {
           isVerified: false,
           verificationStatus: 'pending',
           verificationMethod: 'pending' // Set verification method to pending
+          // Email field intentionally omitted - will be added by user during profile completion
         };
         
         console.log('Creating user with data:', userData);
@@ -179,6 +180,7 @@ router.post('/firebase', async (req, res) => {
                 isVerified: false,
                 verificationStatus: 'pending',
                 verificationMethod: 'pending'
+                // Email field intentionally omitted
               };
               user = new User(retryUserData);
               await user.save();
