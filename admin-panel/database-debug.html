@@ -570,6 +570,9 @@
         window.onload = function() {
             log('authStatus', '🚀 Database Debug Tool initialized', 'info');
             log('authStatus', 'Auto-authenticating...', 'info');
+            // Set the correct credentials for auto-authentication
+            document.getElementById('adminUsername').value = 'admin';
+            document.getElementById('adminPassword').value = 'admin123';
             authenticateAdmin();
         };
     </script>
