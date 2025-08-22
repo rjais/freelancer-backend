@@ -74,6 +74,12 @@ router.get('/:id', firebaseAuth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    console.log('User profile fetched:', {
+      id: user._id,
+      name: user.name,
+      isVerified: user.isVerified,
+      freelancerId: user.freelancerId
+    });
     res.json(user);
   } catch (err) {
     console.error('Error in GET /api/users/:id:', err);
