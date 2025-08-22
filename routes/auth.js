@@ -75,9 +75,16 @@ router.post('/firebase', async (req, res) => {
     phone_number = req.body.phone || req.body.phoneNumber;
     
     if (phone_number) {
-      // Phone number provided in request body
-      uid = idToken.substring(0, 20); // Use token as UID
-      console.log('Using provided phone number:', phone_number);
+      // Phone number provided in request body - try to verify token first
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        uid = decodedToken.uid; // Use actual Firebase UID
+        console.log('Using provided phone number with verified token:', phone_number);
+      } catch (firebaseError) {
+        console.log('Firebase token verification failed, using phone number only:', firebaseError.message);
+        // If token verification fails, generate a unique UID based on phone
+        uid = `phone_${phone_number.replace(/[^0-9]/g, '')}`;
+      }
     } else {
       // Try to extract from Firebase token
       try {
@@ -114,14 +121,36 @@ router.post('/firebase', async (req, res) => {
         isNewUser = true;
         console.log('✅ Created NEW user:', user._id, 'Phone:', phone_number, 'Role:', role);
       } catch (saveError) {
-        if (saveError.code === 11000 && saveError.keyPattern && saveError.keyPattern.phone) {
-          // Duplicate phone number - user was created in another request
-          console.log('⚠️ Duplicate phone number detected, finding existing user');
-          user = await User.findOne({ phone: phone_number });
-          if (user) {
-            console.log('✅ Found existing user after duplicate error:', user._id);
+        console.log('Save error details:', {
+          code: saveError.code,
+          keyPattern: saveError.keyPattern,
+          message: saveError.message
+        });
+        
+        if (saveError.code === 11000) {
+          if (saveError.keyPattern && saveError.keyPattern.phone) {
+            // Duplicate phone number - user was created in another request
+            console.log('⚠️ Duplicate phone number detected, finding existing user');
+            user = await User.findOne({ phone: phone_number });
+            if (user) {
+              console.log('✅ Found existing user after duplicate error:', user._id);
+            } else {
+              throw new Error('Failed to create or find user with this phone number');
+            }
+          } else if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
+            // Duplicate Firebase UID - find user by phone instead
+            console.log('⚠️ Duplicate Firebase UID detected, finding user by phone');
+            user = await User.findOne({ phone: phone_number });
+            if (user) {
+              console.log('✅ Found existing user by phone after Firebase UID duplicate:', user._id);
+              // Update the Firebase UID to match
+              user.firebaseUid = uid;
+              await user.save();
+            } else {
+              throw new Error('Failed to create or find user with this phone number');
+            }
           } else {
-            throw new Error('Failed to create or find user with this phone number');
+            throw saveError;
           }
         } else {
           throw saveError;
