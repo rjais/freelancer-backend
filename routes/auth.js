@@ -113,7 +113,7 @@ router.post('/firebase', async (req, res) => {
           phone: phone_number,
           role: role,
           name: `User ${phone_number.slice(-6)}`, // Generate a default name
-          email: `${phone_number.replace(/[^0-9]/g, '')}@user.com`, // Generate a default email
+          // Don't generate email - let freelancer add their own during profile completion
           isVerified: false,
           verificationStatus: 'pending'
         });

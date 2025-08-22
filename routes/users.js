@@ -176,6 +176,15 @@ router.patch('/:id', firebaseAuth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Error in PATCH /api/users/:id:', err);
+    
+    // Handle duplicate email error specifically
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.email) {
+      return res.status(400).json({ 
+        message: 'Email already in use. Please use a different email address.',
+        error: 'Duplicate email'
+      });
+    }
+    
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
