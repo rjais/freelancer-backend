@@ -115,7 +115,6 @@ router.post('/firebase', async (req, res) => {
           phone: phone_number,
           role: role,
           name: `User ${phone_number.slice(-6)}`, // Generate a default name
-          // Email field intentionally omitted - let freelancer add their own
           isVerified: false,
           verificationStatus: 'pending',
           verificationMethod: 'pending' // Set verification method to pending
@@ -167,8 +166,6 @@ router.post('/firebase', async (req, res) => {
             user = await User.findOne({ phone: phone_number });
             if (user) {
               console.log('✅ Found existing user by phone after email duplicate:', user._id);
-              // Don't update email - let user add their own email later
-              console.log('✅ User found, no email update needed');
             } else {
               console.log('❌ User not found after duplicate email error - phone:', phone_number);
               throw new Error('Failed to create or find user with this phone number - duplicate email but user not found');
