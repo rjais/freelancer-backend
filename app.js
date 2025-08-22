@@ -73,6 +73,10 @@ app.get('/admin-panel/assign-freelancer-id.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'assign-freelancer-id.html'));
 });
 
+app.get('/admin-panel/test-freelancer-id.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel', 'test-freelancer-id.html'));
+});
+
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);
