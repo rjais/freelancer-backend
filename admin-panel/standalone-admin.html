@@ -703,11 +703,11 @@
             documentsGrid.innerHTML = '';
             
             // Profile Photo
-            if (documents.profilePhoto || user.profilePhoto) {
+            if (user.profileImage) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Profile Photo</h4>
-                        <img src="${documents.profilePhoto || user.profilePhoto}" alt="Profile Photo" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${user.profileImage}" alt="Profile Photo" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
@@ -720,11 +720,11 @@
             }
             
             // Aadhar Card
-            if (documents.aadharFront || user.aadharFront) {
+            if (documents.aadhaar && documents.aadhaar.front) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Aadhar Card - Front</h4>
-                        <img src="${documents.aadharFront || user.aadharFront}" alt="Aadhar Front" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${documents.aadhaar.front}" alt="Aadhar Front" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
@@ -736,11 +736,11 @@
                 `;
             }
             
-            if (documents.aadharBack || user.aadharBack) {
+            if (documents.aadhaar && documents.aadhaar.back) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Aadhar Card - Back</h4>
-                        <img src="${documents.aadharBack || user.aadharBack}" alt="Aadhar Back" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${documents.aadhaar.back}" alt="Aadhar Back" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
@@ -753,11 +753,11 @@
             }
             
             // PAN Card
-            if (documents.panCard || user.panCard) {
+            if (documents.pan && documents.pan.front) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>PAN Card</h4>
-                        <img src="${documents.panCard || user.panCard}" alt="PAN Card" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${documents.pan.front}" alt="PAN Card" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
@@ -770,11 +770,11 @@
             }
             
             // Driving License (for delivery works)
-            if (documents.drivingLicenseFront || user.drivingLicenseFront) {
+            if (documents.drivingLicense && documents.drivingLicense.front) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Driving License - Front</h4>
-                        <img src="${documents.drivingLicenseFront || user.drivingLicenseFront}" alt="Driving License Front" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${documents.drivingLicense.front}" alt="Driving License Front" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
@@ -786,11 +786,11 @@
                 `;
             }
             
-            if (documents.drivingLicenseBack || user.drivingLicenseBack) {
+            if (documents.drivingLicense && documents.drivingLicense.back) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Driving License - Back</h4>
-                        <img src="${documents.drivingLicenseBack || user.drivingLicenseBack}" alt="Driving License Back" class="document-image" onclick="openImageModal(this.src)">
+                        <img src="${documents.drivingLicense.back}" alt="Driving License Back" class="document-image" onclick="openImageModal(this.src)">
                     </div>
                 `;
             } else {
