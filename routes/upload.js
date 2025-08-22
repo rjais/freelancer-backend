@@ -1,22 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-
-// Simple multer configuration that doesn't save files
-const upload = multer({
-  storage: multer.memoryStorage(), // Store in memory only
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    // Allow only image files
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
-    }
-  }
-});
+const { upload } = require('../cloudinary-config');
 
 // Upload single file
 router.post('/single', upload.single('document'), async (req, res) => {
@@ -28,11 +12,12 @@ router.post('/single', upload.single('document'), async (req, res) => {
       });
     }
 
-    // Generate a placeholder URL for testing
-    const fileUrl = `https://via.placeholder.com/400x300/007AFF/FFFFFF?text=${encodeURIComponent(req.file.originalname)}`;
+    // Get the Cloudinary URL
+    const fileUrl = req.file.path;
     
-    console.log('File uploaded successfully (placeholder):', {
+    console.log('File uploaded successfully to Cloudinary:', {
       originalName: req.file.originalname,
+      filename: req.file.filename,
       url: fileUrl,
       size: req.file.size
     });
@@ -42,7 +27,7 @@ router.post('/single', upload.single('document'), async (req, res) => {
       message: 'File uploaded successfully',
       file: {
         originalName: req.file.originalname,
-        filename: req.file.originalname,
+        filename: req.file.filename,
         url: fileUrl,
         size: req.file.size
       }
@@ -55,6 +40,59 @@ router.post('/single', upload.single('document'), async (req, res) => {
       error: error.message
     });
   }
+});
+
+// Upload multiple files
+router.post('/multiple', upload.array('documents', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files uploaded'
+      });
+    }
+
+    const uploadedFiles = req.files.map(file => ({
+      originalName: file.originalname,
+      filename: file.filename,
+      url: file.path, // Cloudinary URL
+      size: file.size
+    }));
+
+    console.log('Multiple files uploaded successfully to Cloudinary:', uploadedFiles);
+
+    res.json({
+      success: true,
+      message: 'Files uploaded successfully',
+      files: uploadedFiles
+    });
+  } catch (error) {
+    console.error('Multiple file upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload files',
+      error: error.message
+    });
+  }
+});
+
+// Error handling middleware
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 5MB.'
+      });
+    }
+  }
+  
+  console.error('Upload route error:', error);
+  res.status(500).json({
+    success: false,
+    message: 'Upload failed',
+    error: error.message
+  });
 });
 
 module.exports = router;
