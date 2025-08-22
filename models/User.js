@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   firebaseUid: { type: String, unique: true, sparse: true }, // Add Firebase UID
   role: { type: String, enum: ['client', 'freelancer'], required: true },
   phone: { type: String, unique: true, sparse: true },
+  freelancerId: { type: String, unique: true, sparse: true }, // 5-10 digit unique ID
   gender: { type: String },
   address: { type: String },
   profileImage: { type: String },

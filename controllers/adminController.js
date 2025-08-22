@@ -9,6 +9,25 @@ const Message = require('../models/Message');
 const Job = require('../models/Job');
 
 class AdminController {
+    // Generate unique Freelancer ID (5-10 digits)
+    async generateFreelancerId() {
+        let freelancerId;
+        let isUnique = false;
+        
+        while (!isUnique) {
+            // Generate a random number between 10000 and 999999999 (5-9 digits)
+            freelancerId = Math.floor(Math.random() * 900000000) + 10000;
+            freelancerId = freelancerId.toString();
+            
+            // Check if this ID already exists
+            const existingUser = await User.findOne({ freelancerId });
+            if (!existingUser) {
+                isUnique = true;
+            }
+        }
+        
+        return freelancerId;
+    }
     // Authentication
     async login(req, res) {
         try {
@@ -175,12 +194,16 @@ class AdminController {
             
             await verification.save();
             
-            // Update user verification status
+            // Generate unique Freelancer ID
+            const freelancerId = await this.generateFreelancerId();
+            
+            // Update user verification status and assign Freelancer ID
             await User.findByIdAndUpdate(verification.userId, {
                 isVerified: true,
                 verificationMethod: 'manual',
                 verificationStatus: 'verified',
-                verifiedAt: new Date()
+                verifiedAt: new Date(),
+                freelancerId: freelancerId
             });
             
             res.json({ success: true, verification });
