@@ -65,6 +65,10 @@ app.get('/admin-panel/debug-tool.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'debug-tool.html'));
 });
 
+app.get('/admin-panel/image-debug-tool.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel', 'image-debug-tool.html'));
+});
+
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);

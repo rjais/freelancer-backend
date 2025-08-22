@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Debug Tool - Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .test-item h3 {
+            margin: 0 0 10px 0;
+            color: #555;
+        }
+        .url-display {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .user-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .user-item:hover {
+            background: #f0f0f0;
+        }
+        .user-item.selected {
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Image Debug Tool - Admin Panel</h1>
+        
+        <!-- Section 1: Test Cloudinary URLs -->
+        <div class="section">
+            <h2>1. Test Cloudinary URLs</h2>
+            <div class="test-item">
+                <h3>Test Known Cloudinary Image</h3>
+                <div class="url-display">https://res.cloudinary.com/dzpqrejsi/image/upload/v1755843200/people-app-documents/n2wrd8bf8jcfxten6mjg.jpg</div>
+                <button onclick="testCloudinaryImage()">Test Cloudinary Image</button>
+                <div id="cloudinary-result"></div>
+                <img id="cloudinary-preview" class="image-preview" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Section 2: Test URL Resolution -->
+        <div class="section">
+            <h2>2. Test URL Resolution</h2>
+            <div class="test-item">
+                <h3>Test fixDocumentUrl Function</h3>
+                <input type="text" id="test-url" placeholder="Enter URL to test (e.g., file:///path/to/image.jpg)" value="file:///path/to/image.jpg">
+                <button onclick="testUrlResolution()">Test URL Resolution</button>
+                <div id="url-resolution-result"></div>
+            </div>
+        </div>
+
+        <!-- Section 3: Fetch Users and Test Their Images -->
+        <div class="section">
+            <h2>3. Fetch Users and Test Their Images</h2>
+            <div class="test-item">
+                <button onclick="fetchUsers()">Fetch All Users</button>
+                <div id="users-result"></div>
+                <div id="user-list" class="user-list" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Section 4: Test Specific User Images -->
+        <div class="section">
+            <h2>4. Test Specific User Images</h2>
+            <div class="test-item">
+                <input type="text" id="user-id" placeholder="Enter User ID or Phone Number">
+                <button onclick="testUserImages()">Test User Images</button>
+                <div id="user-images-result"></div>
+            </div>
+        </div>
+
+        <!-- Section 5: Manual Image Test -->
+        <div class="section">
+            <h2>5. Manual Image Test</h2>
+            <div class="test-item">
+                <input type="text" id="manual-url" placeholder="Enter any image URL to test">
+                <button onclick="testManualImage()">Test Manual Image</button>
+                <div id="manual-result"></div>
+                <img id="manual-preview" class="image-preview" style="display: none;">
+            </div>
+        </div>
+
+        <!-- Section 6: Debug Log -->
+        <div class="section">
+            <h2>6. Debug Log</h2>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="debug-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://freelancer-backend-jv21.onrender.com/api';
+        let selectedUser = null;
+
+        function log(message) {
+            const logDiv = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').innerHTML = '';
+        }
+
+        // Test 1: Cloudinary Image
+        async function testCloudinaryImage() {
+            const url = 'https://res.cloudinary.com/dzpqrejsi/image/upload/v1755843200/people-app-documents/n2wrd8bf8jcfxten6mjg.jpg';
+            const resultDiv = document.getElementById('cloudinary-result');
+            const previewImg = document.getElementById('cloudinary-preview');
+            
+            resultDiv.innerHTML = '<div class="status loading">Testing Cloudinary image...</div>';
+            log(`Testing Cloudinary URL: ${url}`);
+            
+            try {
+                // Test with fetch
+                const response = await fetch(url);
+                log(`Fetch response status: ${response.status}`);
+                log(`Fetch response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    log(`Image blob size: ${blob.size} bytes`);
+                    log(`Image blob type: ${blob.type}`);
+                    
+                    // Create object URL for preview
+                    const objectUrl = URL.createObjectURL(blob);
+                    previewImg.src = objectUrl;
+                    previewImg.style.display = 'block';
+                    
+                    resultDiv.innerHTML = '<div class="status success">✅ Cloudinary image loaded successfully!</div>';
+                    log('✅ Cloudinary image test passed');
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Failed to load image. Status: ${response.status}</div>`;
+                    log(`❌ Cloudinary image test failed: ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                log(`❌ Cloudinary image test error: ${error.message}`);
+            }
+        }
+
+        // Test 2: URL Resolution
+        function testUrlResolution() {
+            const testUrl = document.getElementById('test-url').value;
+            const resultDiv = document.getElementById('url-resolution-result');
+            
+            log(`Testing URL resolution for: ${testUrl}`);
+            
+            // Simulate the fixDocumentUrl function
+            function fixDocumentUrl(url) {
+                if (!url) return '';
+                
+                log(`Original URL: ${url}`);
+                
+                // If it's already a full URL, return as is
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    log(`URL is already full: ${url}`);
+                    return url;
+                }
+                
+                // If it's a file:// URL, use the document proxy
+                if (url.startsWith('file://')) {
+                    const proxyUrl = `${API_BASE_URL.replace('/api', '')}/admin/document-proxy?url=${encodeURIComponent(url)}`;
+                    log(`File URL converted to proxy: ${proxyUrl}`);
+                    return proxyUrl;
+                }
+                
+                // If it's a relative path starting with /uploads, add server base URL
+                if (url.startsWith('/uploads/')) {
+                    const fullUrl = `https://freelancer-backend-jv21.onrender.com${url}`;
+                    log(`Relative upload path converted: ${fullUrl}`);
+                    return fullUrl;
+                }
+                
+                // If it's a relative path, add server base URL
+                if (url.startsWith('/')) {
+                    const fullUrl = `https://freelancer-backend-jv21.onrender.com${url}`;
+                    log(`Relative path converted: ${fullUrl}`);
+                    return fullUrl;
+                }
+                
+                // If it's just a filename, assume it's in uploads folder
+                if (!url.includes('/')) {
+                    const fullUrl = `https://freelancer-backend-jv21.onrender.com/uploads/${url}`;
+                    log(`Filename converted: ${fullUrl}`);
+                    return fullUrl;
+                }
+                
+                // Default: add server base URL
+                const fullUrl = `https://freelancer-backend-jv21.onrender.com/${url}`;
+                log(`Default conversion: ${fullUrl}`);
+                return fullUrl;
+            }
+            
+            const resolvedUrl = fixDocumentUrl(testUrl);
+            resultDiv.innerHTML = `
+                <div class="status success">URL Resolution Complete</div>
+                <div class="url-display"><strong>Original:</strong> ${testUrl}</div>
+                <div class="url-display"><strong>Resolved:</strong> ${resolvedUrl}</div>
+            `;
+        }
+
+        // Test 3: Fetch Users
+        async function fetchUsers() {
+            const resultDiv = document.getElementById('users-result');
+            const userListDiv = document.getElementById('user-list');
+            
+            resultDiv.innerHTML = '<div class="status loading">Fetching users...</div>';
+            log('Fetching users from API...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/users`);
+                log(`Users API response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Fetched ${data.users ? data.users.length : 0} users`);
+                    
+                    if (data.users && data.users.length > 0) {
+                        resultDiv.innerHTML = `<div class="status success">✅ Found ${data.users.length} users</div>`;
+                        
+                        // Display user list
+                        userListDiv.innerHTML = '';
+                        data.users.forEach(user => {
+                            const userDiv = document.createElement('div');
+                            userDiv.className = 'user-item';
+                            userDiv.innerHTML = `
+                                <strong>${user.name || 'No Name'}</strong> (${user.phone || 'No Phone'})<br>
+                                <small>ID: ${user._id}</small>
+                            `;
+                            userDiv.onclick = () => selectUser(user);
+                            userListDiv.appendChild(userDiv);
+                        });
+                        userListDiv.style.display = 'block';
+                    } else {
+                        resultDiv.innerHTML = '<div class="status error">❌ No users found</div>';
+                    }
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="status error">❌ Failed to fetch users: ${response.status}</div>`;
+                    log(`❌ Users API error: ${errorText}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                log(`❌ Users fetch error: ${error.message}`);
+            }
+        }
+
+        // Select user for testing
+        function selectUser(user) {
+            selectedUser = user;
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('selected'));
+            event.target.closest('.user-item').classList.add('selected');
+            
+            log(`Selected user: ${user.name} (${user._id})`);
+            document.getElementById('user-id').value = user._id;
+        }
+
+        // Test 4: Test User Images
+        async function testUserImages() {
+            const userId = document.getElementById('user-id').value;
+            const resultDiv = document.getElementById('user-images-result');
+            
+            if (!userId) {
+                resultDiv.innerHTML = '<div class="status error">❌ Please enter a User ID or select a user</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="status loading">Testing user images...</div>';
+            log(`Testing images for user: ${userId}`);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`);
+                log(`User API response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    log(`User data: ${JSON.stringify(user, null, 2)}`);
+                    
+                    let html = '<div class="status success">✅ User found</div>';
+                    html += `<h4>User: ${user.name} (${user.phone})</h4>`;
+                    
+                    // Test profile image
+                    if (user.profileImage) {
+                        html += `<h5>Profile Image:</h5>`;
+                        html += `<div class="url-display">${user.profileImage}</div>`;
+                        html += `<button onclick="testSingleImage('${user.profileImage}', 'profile')">Test Profile Image</button>`;
+                        html += `<div id="profile-test-result"></div>`;
+                        html += `<img id="profile-preview" class="image-preview" style="display: none;">`;
+                    }
+                    
+                    // Test documents
+                    if (user.documents) {
+                        html += `<h5>Documents:</h5>`;
+                        const documents = [];
+                        
+                        if (user.documents.aadhaar) {
+                            if (user.documents.aadhaar.front) documents.push({type: 'Aadhar Front', url: user.documents.aadhaar.front});
+                            if (user.documents.aadhaar.back) documents.push({type: 'Aadhar Back', url: user.documents.aadhaar.back});
+                        }
+                        if (user.documents.pan && user.documents.pan.front) {
+                            documents.push({type: 'PAN Front', url: user.documents.pan.front});
+                        }
+                        if (user.documents.drivingLicense) {
+                            if (user.documents.drivingLicense.front) documents.push({type: 'DL Front', url: user.documents.drivingLicense.front});
+                            if (user.documents.drivingLicense.back) documents.push({type: 'DL Back', url: user.documents.drivingLicense.back});
+                        }
+                        
+                        documents.forEach((doc, index) => {
+                            html += `<div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">`;
+                            html += `<strong>${doc.type}:</strong><br>`;
+                            html += `<div class="url-display">${doc.url}</div>`;
+                            html += `<button onclick="testSingleImage('${doc.url}', 'doc-${index}')">Test ${doc.type}</button>`;
+                            html += `<div id="doc-${index}-test-result"></div>`;
+                            html += `<img id="doc-${index}-preview" class="image-preview" style="display: none;">`;
+                            html += `</div>`;
+                        });
+                    }
+                    
+                    resultDiv.innerHTML = html;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="status error">❌ Failed to fetch user: ${response.status}</div>`;
+                    log(`❌ User API error: ${errorText}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                log(`❌ User images test error: ${error.message}`);
+            }
+        }
+
+        // Test single image
+        async function testSingleImage(url, id) {
+            const resultDiv = document.getElementById(`${id}-test-result`);
+            const previewImg = document.getElementById(`${id}-preview`);
+            
+            resultDiv.innerHTML = '<div class="status loading">Testing image...</div>';
+            log(`Testing single image: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                log(`Single image response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    log(`Single image blob size: ${blob.size} bytes`);
+                    
+                    const objectUrl = URL.createObjectURL(blob);
+                    previewImg.src = objectUrl;
+                    previewImg.style.display = 'block';
+                    
+                    resultDiv.innerHTML = '<div class="status success">✅ Image loaded successfully!</div>';
+                    log(`✅ Single image test passed for ${id}`);
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Failed to load image. Status: ${response.status}</div>`;
+                    log(`❌ Single image test failed for ${id}: ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                log(`❌ Single image test error for ${id}: ${error.message}`);
+            }
+        }
+
+        // Test 5: Manual Image Test
+        async function testManualImage() {
+            const url = document.getElementById('manual-url').value;
+            const resultDiv = document.getElementById('manual-result');
+            const previewImg = document.getElementById('manual-preview');
+            
+            if (!url) {
+                resultDiv.innerHTML = '<div class="status error">❌ Please enter a URL</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="status loading">Testing manual image...</div>';
+            log(`Testing manual image: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                log(`Manual image response status: ${response.status}`);
+                log(`Manual image response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    log(`Manual image blob size: ${blob.size} bytes`);
+                    log(`Manual image blob type: ${blob.type}`);
+                    
+                    const objectUrl = URL.createObjectURL(blob);
+                    previewImg.src = objectUrl;
+                    previewImg.style.display = 'block';
+                    
+                    resultDiv.innerHTML = '<div class="status success">✅ Manual image loaded successfully!</div>';
+                    log('✅ Manual image test passed');
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Failed to load image. Status: ${response.status}</div>`;
+                    log(`❌ Manual image test failed: ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                log(`❌ Manual image test error: ${error.message}`);
+            }
+        }
+
+        // Initialize
+        log('Image Debug Tool initialized');
+        log(`API Base URL: ${API_BASE_URL}`);
+    </script>
+</body>
+</html>
