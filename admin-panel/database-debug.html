@@ -102,7 +102,7 @@
         <div class="section">
             <h3>🔐 Admin Authentication</h3>
             <div class="input-group">
-                <input type="text" id="adminEmail" placeholder="Admin Email" value="admin@freelancer.com">
+                <input type="text" id="adminUsername" placeholder="Admin Username" value="admin">
                 <input type="password" id="adminPassword" placeholder="Admin Password" value="admin123">
                 <button onclick="authenticateAdmin()">Login</button>
             </div>
@@ -175,7 +175,7 @@
         }
 
         async function authenticateAdmin() {
-            const email = document.getElementById('adminEmail').value;
+            const username = document.getElementById('adminUsername').value;
             const password = document.getElementById('adminPassword').value;
             
             log('authStatus', '🔐 Authenticating admin...', 'info');
@@ -184,7 +184,7 @@
                 const response = await fetch(`${API_BASE_URL}/admin/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ username, password })
                 });
                 
                 const data = await response.json();
