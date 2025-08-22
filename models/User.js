@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, unique: true, sparse: true }, // Make email optional but unique when provided
+  email: { type: String, unique: true, sparse: true, default: undefined }, // Make email optional but unique when provided
   password: { type: String }, // Make password optional for Firebase users
   firebaseUid: { type: String, unique: true, sparse: true }, // Add Firebase UID
   role: { type: String, enum: ['client', 'freelancer'], required: true },
