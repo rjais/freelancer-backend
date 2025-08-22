@@ -332,6 +332,30 @@ router.patch('/users/:id/verification-status', authenticateAdmin, async (req, re
         
         if (verificationStatus === 'approved') {
             updateData.verifiedAt = verifiedAt || new Date();
+            
+            // Generate unique Freelancer ID for approved users
+            const generateFreelancerId = async () => {
+                let freelancerId;
+                let isUnique = false;
+                
+                while (!isUnique) {
+                    freelancerId = Math.floor(Math.random() * 900000000) + 10000; // 5-9 digits
+                    freelancerId = freelancerId.toString();
+                    
+                    const existingUser = await User.findOne({ freelancerId });
+                    if (!existingUser) {
+                        isUnique = true;
+                    }
+                }
+                
+                return freelancerId;
+            };
+            
+            // Generate and assign Freelancer ID
+            const freelancerId = await generateFreelancerId();
+            updateData.freelancerId = freelancerId;
+            
+            console.log(`Generated Freelancer ID: ${freelancerId} for user: ${req.params.id}`);
         } else if (verificationStatus === 'rejected') {
             updateData.rejectedAt = rejectedAt || new Date();
         }
