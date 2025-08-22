@@ -115,7 +115,8 @@ router.post('/firebase', async (req, res) => {
           name: `User ${phone_number.slice(-6)}`, // Generate a default name
           // Don't generate email - let freelancer add their own during profile completion
           isVerified: false,
-          verificationStatus: 'pending'
+          verificationStatus: 'pending',
+          verificationMethod: 'pending' // Set verification method to pending
         });
         await user.save();
         isNewUser = true;
@@ -124,7 +125,8 @@ router.post('/firebase', async (req, res) => {
         console.log('Save error details:', {
           code: saveError.code,
           keyPattern: saveError.keyPattern,
-          message: saveError.message
+          message: saveError.message,
+          errors: saveError.errors
         });
         
         if (saveError.code === 11000) {
@@ -165,6 +167,7 @@ router.post('/firebase', async (req, res) => {
             throw saveError;
           }
         } else {
+          console.log('Non-duplicate key error:', saveError);
           throw saveError;
         }
       }
