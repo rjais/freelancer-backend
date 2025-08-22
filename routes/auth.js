@@ -176,6 +176,15 @@ router.post('/firebase', async (req, res) => {
           }
         } else {
           console.log('Non-duplicate key error:', saveError);
+          console.log('Error type:', typeof saveError);
+          console.log('Error constructor:', saveError.constructor.name);
+          
+          // If it's a validation error, provide a more specific message
+          if (saveError.name === 'ValidationError') {
+            console.log('Validation error details:', saveError.errors);
+            throw new Error(`Validation failed: ${Object.keys(saveError.errors).join(', ')}`);
+          }
+          
           throw saveError;
         }
       }
