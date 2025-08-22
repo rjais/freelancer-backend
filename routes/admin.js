@@ -130,7 +130,7 @@ router.get('/users', authenticateAdmin, async (req, res) => {
         
         // Get users from your database
         const users = await User.find(query)
-            .select('name email phone verificationStatus isVerified createdAt profileImage documents address city state pincode dateOfBirth gender firstName lastName')
+            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName')
             .sort({ createdAt: -1 });
         
         res.json({
@@ -149,7 +149,7 @@ router.get('/users', authenticateAdmin, async (req, res) => {
 router.get('/users/:id', authenticateAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
-            .select('name email phone verificationStatus isVerified createdAt profileImage documents address city state pincode dateOfBirth gender firstName lastName');
+            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName');
         
         if (!user) {
             return res.status(404).json({
