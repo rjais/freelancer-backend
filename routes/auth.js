@@ -73,17 +73,19 @@ router.post('/firebase', async (req, res) => {
     
     // First priority: Use phone number from request body
     phone_number = req.body.phone || req.body.phoneNumber;
+    console.log('Phone number from request:', phone_number);
     
     if (phone_number) {
       // Phone number provided in request body - try to verify token first
       try {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         uid = decodedToken.uid; // Use actual Firebase UID
-        console.log('Using provided phone number with verified token:', phone_number);
+        console.log('Using provided phone number with verified token:', phone_number, 'UID:', uid);
       } catch (firebaseError) {
         console.log('Firebase token verification failed, using phone number only:', firebaseError.message);
         // If token verification fails, generate a unique UID based on phone
         uid = `phone_${phone_number.replace(/[^0-9]/g, '')}`;
+        console.log('Generated UID from phone:', uid);
       }
     } else {
       // Try to extract from Firebase token
@@ -124,6 +126,7 @@ router.post('/firebase', async (req, res) => {
         await user.save();
         isNewUser = true;
         console.log('✅ Created NEW user:', user._id, 'Phone:', phone_number, 'Role:', role);
+        console.log('User creation successful, proceeding to token generation');
       } catch (saveError) {
         console.log('Save error details:', {
           code: saveError.code,
