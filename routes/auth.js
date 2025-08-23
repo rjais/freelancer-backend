@@ -161,9 +161,32 @@ router.post('/firebase', async (req, res) => {
           };
           
           user = new User(userData);
-          await user.save();
-          isNewUser = true;
-          console.log('✅ Created new user for account creation:', user._id);
+          try {
+            await user.save();
+            isNewUser = true;
+            console.log('✅ Created new user for account creation:', user._id);
+          } catch (saveError) {
+            console.error('❌ Error creating new user:', saveError);
+            
+            // Handle duplicate key errors
+            if (saveError.code === 11000) {
+              console.log('🔄 Duplicate key error during user creation, trying to resolve...');
+              
+              // If it's a firebaseUid duplicate, try without it
+              if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
+                console.log('🔄 Creating user without firebaseUid to avoid conflict...');
+                userData.firebaseUid = undefined;
+                user = new User(userData);
+                await user.save();
+                isNewUser = true;
+                console.log('✅ Created new user without firebaseUid:', user._id);
+              } else {
+                throw saveError; // Re-throw if it's not a firebaseUid issue
+              }
+            } else {
+              throw saveError; // Re-throw other errors
+            }
+          }
         }
       } else {
         // Login attempt with non-existent user
@@ -193,8 +216,18 @@ router.post('/firebase', async (req, res) => {
       console.log('🔄 Existing user found:', user._id, 'Phone:', phone_number, 'Current role:', user.role, 'Requested role:', role);
       
       let updated = false;
+      
+      // Check if firebaseUid needs to be updated
       if (user.firebaseUid !== uid) {
-        user.firebaseUid = uid;
+        // Check if the new UID is already used by another user
+        const existingUserWithUid = await User.findOne({ firebaseUid: uid });
+        if (existingUserWithUid && existingUserWithUid._id.toString() !== user._id.toString()) {
+          console.log('⚠️ Firebase UID already used by another user, removing from current user');
+          // Remove firebaseUid from current user to avoid conflict
+          user.firebaseUid = undefined;
+        } else {
+          user.firebaseUid = uid;
+        }
         updated = true;
         console.log('Updated firebaseUid');
       }
@@ -205,8 +238,29 @@ router.post('/firebase', async (req, res) => {
       }
       
       if (updated) {
-        await user.save();
-        console.log('✅ User updated successfully');
+        try {
+          await user.save();
+          console.log('✅ User updated successfully');
+        } catch (saveError) {
+          console.error('❌ Error saving user updates:', saveError);
+          
+          // Handle duplicate key errors
+          if (saveError.code === 11000) {
+            console.log('🔄 Duplicate key error detected, trying to resolve...');
+            
+            // If it's a firebaseUid duplicate, remove it and try again
+            if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
+              console.log('🔄 Removing conflicting firebaseUid and retrying...');
+              user.firebaseUid = undefined;
+              await user.save();
+              console.log('✅ User updated successfully after removing conflicting firebaseUid');
+            } else {
+              throw saveError; // Re-throw if it's not a firebaseUid issue
+            }
+          } else {
+            throw saveError; // Re-throw other errors
+          }
+        }
       }
       
       console.log('📊 User status - isVerified:', user.isVerified, 'verificationStatus:', user.verificationStatus);
