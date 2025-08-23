@@ -7,6 +7,11 @@ router.get('/test', (req, res) => {
     res.json({ message: 'Admin routes are working' });
 });
 
+// Test verification endpoints
+router.get('/verifications-test', authenticateAdmin, (req, res) => {
+    res.json({ message: 'Admin verification endpoints are accessible' });
+});
+
 // Update your existing admin middleware to handle Firebase tokens
 const authenticateAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '') || 
@@ -432,17 +437,21 @@ router.post('/users/:id/resubmit-verification', authenticateAdmin, async (req, r
 // Get Initial Verifications (Admin endpoint)
 router.get('/verifications/initial', authenticateAdmin, async (req, res) => {
     try {
+        console.log('🔍 Admin endpoint: /verifications/initial called');
         const Verification = require('../models/Verification');
+        console.log('✅ Verification model loaded');
+        
         const verifications = await Verification.find({ type: 'initial', status: 'pending' })
             .populate('userId', 'name phone email')
             .sort({ submittedAt: -1 });
 
+        console.log(`📋 Found ${verifications.length} initial verifications`);
         res.json({
             success: true,
             verifications: verifications
         });
     } catch (error) {
-        console.error('Error fetching initial verifications:', error);
+        console.error('❌ Error fetching initial verifications:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch initial verifications',
@@ -454,17 +463,21 @@ router.get('/verifications/initial', authenticateAdmin, async (req, res) => {
 // Get Resubmission Verifications (Admin endpoint)
 router.get('/verifications/resubmissions', authenticateAdmin, async (req, res) => {
     try {
+        console.log('🔍 Admin endpoint: /verifications/resubmissions called');
         const Verification = require('../models/Verification');
+        console.log('✅ Verification model loaded');
+        
         const verifications = await Verification.find({ type: 'resubmission', status: 'pending' })
             .populate('userId', 'name phone email')
             .sort({ submittedAt: -1 });
 
+        console.log(`📋 Found ${verifications.length} resubmission verifications`);
         res.json({
             success: true,
             verifications: verifications
         });
     } catch (error) {
-        console.error('Error fetching resubmission verifications:', error);
+        console.error('❌ Error fetching resubmission verifications:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch resubmission verifications',
