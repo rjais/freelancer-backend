@@ -107,8 +107,20 @@ router.post('/firebase', async (req, res) => {
     let user = await User.findOne({ phone: phone_number });
     let isNewUser = false;
     
+    // Check if this is a login attempt (user doesn't exist)
+    const action = req.body.action || 'signup'; // Default to signup for backward compatibility
+    
     if (!user) {
-      // Create new user if doesn't exist
+      if (action === 'login') {
+        // For login, don't create a new user - return 404
+        console.log('❌ Login attempt with non-existent user:', phone_number);
+        return res.status(404).json({ 
+          message: 'No user found with this phone number. Please create an account first.',
+          error: 'User not found'
+        });
+      }
+      
+      // Create new user if doesn't exist (for signup)
       try {
         // Create user data without email field to avoid unique constraint issues
         const userData = {
