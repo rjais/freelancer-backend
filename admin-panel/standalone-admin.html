@@ -1052,17 +1052,7 @@
                 
                 const userData = await userResponse.json();
                 const user = userData.user || userData;
-                
-                // Then, get verification details (which contain the documents)
-                const verificationResponse = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/user/${userId}`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                
-                let verification = null;
-                if (verificationResponse.ok) {
-                    const verificationData = await verificationResponse.json();
-                    verification = verificationData.verification;
-                }
+                const verification = userData.verification;
                 
                 // Load user details in modal with verification data
                 loadUserDetailsInModal(user, verification);

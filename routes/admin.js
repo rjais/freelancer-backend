@@ -166,7 +166,20 @@ router.get('/users/:id', authenticateAdmin, async (req, res) => {
             });
         }
         
-        res.json(user);
+        // Also fetch verification data for this user
+        let verification = null;
+        try {
+            const Verification = require('../models/Verification');
+            verification = await Verification.findOne({ userId: req.params.id })
+                .sort({ submittedAt: -1 });
+        } catch (verificationError) {
+            console.log('No verification data found for user:', req.params.id);
+        }
+        
+        res.json({
+            user: user,
+            verification: verification
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
