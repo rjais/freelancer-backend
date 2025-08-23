@@ -673,12 +673,23 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
             
             // Hide all sections
-            document.querySelectorAll('.users-section').forEach(section => section.style.display = 'none');
+            document.querySelectorAll('.users-section').forEach(section => {
+                console.log(`🙈 Hiding section: ${section.id}`);
+                section.style.display = 'none';
+            });
             
             // Show selected section
-            document.getElementById(`${tab}-section`).style.display = 'block';
+            const selectedSection = document.getElementById(`${tab}-section`);
+            console.log(`👁️ Showing section: ${selectedSection?.id}`);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            } else {
+                console.error(`❌ Section not found: ${tab}-section`);
+            }
             
             // Load appropriate data
+            console.log('🔑 Admin token available:', !!adminToken);
+            
             if (tab === 'all') {
                 console.log('📋 Loading all users...');
                 loadUsers();
@@ -694,6 +705,13 @@
         async function loadUsers() {
             console.log('🔄 Loading users...');
             const usersList = document.getElementById('usersList');
+            console.log('📋 usersList element:', usersList);
+            
+            if (!usersList) {
+                console.error('❌ usersList element not found!');
+                return;
+            }
+            
             usersList.innerHTML = '<div class="loading">Loading users...</div>';
             
             try {
