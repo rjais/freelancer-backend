@@ -704,13 +704,19 @@
                 section.style.display = 'none';
             });
             
-            // Show selected section
-            const selectedSection = document.getElementById(`${tab}-section`);
+            // Show selected section - handle special case for 'all' tab
+            let selectedSection;
+            if (tab === 'all') {
+                selectedSection = document.getElementById('all-users-section');
+            } else {
+                selectedSection = document.getElementById(`${tab}-section`);
+            }
+            
             console.log(`👁️ Showing section: ${selectedSection?.id}`);
             if (selectedSection) {
                 selectedSection.style.display = 'block';
             } else {
-                console.error(`❌ Section not found: ${tab}-section`);
+                console.error(`❌ Section not found for tab: ${tab}`);
             }
             
             // Load appropriate data
