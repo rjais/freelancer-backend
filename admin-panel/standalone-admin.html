@@ -586,6 +586,7 @@
     <script>
         let adminToken = null;
         let currentUserId = null;
+        let currentVerificationId = null;
         
         // Check API status on page load
         window.addEventListener('load', () => {
@@ -952,7 +953,8 @@
         }
         
         async function verifyUserFromQueue(verificationId, type) {
-            currentUserId = verificationId;
+            currentVerificationId = verificationId;
+            currentUserId = null; // Reset user ID
             
             try {
                 const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${verificationId}`, {
@@ -1039,6 +1041,7 @@
         
         async function verifyUser(userId) {
             currentUserId = userId;
+            currentVerificationId = null; // Reset verification ID
             
             try {
                 // First, get user details
@@ -1269,12 +1272,12 @@
             
             try {
                 // Check if this is a verification from queue or regular user
-                const isFromQueue = currentUserId.length === 24; // MongoDB ObjectId length
+                const isFromQueue = currentVerificationId !== null;
                 
                 let response;
                 if (isFromQueue) {
                     // This is a verification from the queue
-                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentUserId}/approve`, {
+                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentVerificationId}/approve`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1336,12 +1339,12 @@
             
             try {
                 // Check if this is a verification from queue or regular user
-                const isFromQueue = currentUserId.length === 24; // MongoDB ObjectId length
+                const isFromQueue = currentVerificationId !== null;
                 
                 let response;
                 if (isFromQueue) {
                     // This is a verification from the queue
-                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentUserId}/reject`, {
+                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentVerificationId}/reject`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
