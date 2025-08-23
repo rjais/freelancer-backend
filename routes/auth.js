@@ -103,9 +103,24 @@ router.post('/firebase', async (req, res) => {
       }
     }
 
-    // Check if user exists in our database by phone number
+    // Check if user exists in our database by phone number or Firebase UID
     let user = await User.findOne({ phone: phone_number });
     let isNewUser = false;
+    
+    // If no user found by phone, check by Firebase UID
+    if (!user && uid) {
+      user = await User.findOne({ firebaseUid: uid });
+      if (user) {
+        console.log('🔍 Found user by Firebase UID:', user._id, 'Phone:', user.phone, 'Requested phone:', phone_number);
+        
+        // If phone numbers don't match, update the phone number
+        if (user.phone !== phone_number) {
+          console.log('📱 Updating phone number from', user.phone, 'to', phone_number);
+          user.phone = phone_number;
+          await user.save();
+        }
+      }
+    }
     
     // Check if this is a login attempt or account creation
     const action = req.body.action || 'login'; // Default to login for security
@@ -115,20 +130,41 @@ router.post('/firebase', async (req, res) => {
         // Create new user for account creation flow
         console.log('📝 Creating new user for account creation:', phone_number);
         
-        const userData = {
-          firebaseUid: uid,
-          phone: phone_number,
-          role: role,
-          name: `User ${phone_number.slice(-6)}`,
-          isVerified: false,
-          verificationStatus: 'pending',
-          verificationMethod: 'pending'
-        };
-        
-        user = new User(userData);
-        await user.save();
-        isNewUser = true;
-        console.log('✅ Created new user for account creation:', user._id);
+        // Check if Firebase UID already exists
+        const existingUserWithUid = await User.findOne({ firebaseUid: uid });
+        if (existingUserWithUid) {
+          console.log('⚠️ Firebase UID already exists, updating existing user instead');
+          user = existingUserWithUid;
+          
+          // Update phone number if different
+          if (user.phone !== phone_number) {
+            user.phone = phone_number;
+          }
+          
+          // Update role if different
+          if (user.role !== role) {
+            user.role = role;
+          }
+          
+          await user.save();
+          console.log('✅ Updated existing user with new phone/role:', user._id);
+        } else {
+          // Create completely new user
+          const userData = {
+            firebaseUid: uid,
+            phone: phone_number,
+            role: role,
+            name: `User ${phone_number.slice(-6)}`,
+            isVerified: false,
+            verificationStatus: 'pending',
+            verificationMethod: 'pending'
+          };
+          
+          user = new User(userData);
+          await user.save();
+          isNewUser = true;
+          console.log('✅ Created new user for account creation:', user._id);
+        }
       } else {
         // Login attempt with non-existent user
         console.log('❌ No user found in database:', phone_number);
