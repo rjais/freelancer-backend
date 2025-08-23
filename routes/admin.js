@@ -7,11 +7,6 @@ router.get('/test', (req, res) => {
     res.json({ message: 'Admin routes are working' });
 });
 
-// Test verification endpoints
-router.get('/verifications-test', authenticateAdmin, (req, res) => {
-    res.json({ message: 'Admin verification endpoints are accessible' });
-});
-
 // Update your existing admin middleware to handle Firebase tokens
 const authenticateAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '') || 
@@ -44,6 +39,11 @@ const authenticateAdmin = (req, res, next) => {
         });
     }
 };
+
+// Test verification endpoints (after authenticateAdmin is defined)
+router.get('/verifications-test', authenticateAdmin, (req, res) => {
+    res.json({ message: 'Admin verification endpoints are accessible' });
+});
 
 // Firebase Admin Authentication
 router.post('/login', async (req, res) => {
