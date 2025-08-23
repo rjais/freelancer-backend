@@ -739,6 +739,11 @@
             const usersList = document.getElementById('usersList');
             console.log('📋 usersList element:', usersList);
             
+            // Check if the section is visible
+            const allUsersSection = document.getElementById('all-users-section');
+            console.log('👁️ all-users-section visibility:', allUsersSection?.style.display);
+            console.log('👁️ all-users-section element:', allUsersSection);
+            
             if (!usersList) {
                 console.error('❌ usersList element not found!');
                 return;
@@ -772,18 +777,21 @@
                 document.getElementById('rejectedCount').textContent = rejected;
                 document.getElementById('totalCount').textContent = users.length;
                 
-                // Load badge counts for all tabs
-                loadBadgeCounts();
+                // Load badge counts for all tabs (commented out temporarily for debugging)
+                // loadBadgeCounts();
                 
                 // Display users
+                console.log('🎨 Starting to display users...');
                 usersList.innerHTML = '';
                 
                 if (users.length === 0) {
+                    console.log('📭 No users to display');
                     usersList.innerHTML = '<div class="loading">No users found</div>';
                     return;
                 }
                 
-                users.forEach(user => {
+                users.forEach((user, index) => {
+                    console.log(`👤 Processing user ${index + 1}:`, user.name || user.fullName || 'Unknown');
                     const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
                     const userItem = document.createElement('div');
                     userItem.className = 'user-item';
@@ -791,7 +799,7 @@
                     userItem.innerHTML = `
                         <div class="user-info">
                             <h3>${userName}</h3>
-                            <p>${user.email} • ${user.phone || 'No phone'} • ID: ${user._id}</p>
+                            <p>${user.email || 'No email'} • ${user.phone || 'No phone'} • ID: ${user._id}</p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <span class="status-badge status-${user.verificationStatus}">
@@ -807,7 +815,10 @@
                     `;
                     
                     usersList.appendChild(userItem);
+                    console.log(`✅ Added user ${index + 1} to DOM`);
                 });
+                
+                console.log(`🎉 Finished displaying ${users.length} users`);
                 
             } catch (error) {
                 console.error('Failed to load users:', error);
