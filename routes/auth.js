@@ -133,7 +133,7 @@ router.post('/firebase', async (req, res) => {
         
         // Return a temporary user object for the frontend
         user = {
-          _id: null, // No database ID yet
+          _id: `temp_${Date.now()}`, // Temporary ID for frontend
           phone: phone_number,
           role: role,
           firebaseUid: uid,
