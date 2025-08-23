@@ -54,10 +54,15 @@
                         <i class="fas fa-tachometer-alt"></i>
                         Dashboard
                     </a>
-                    <a href="#pending" class="nav-item" data-section="pending">
-                        <i class="fas fa-clock"></i>
-                        Pending Verifications
-                        <span class="badge" id="pendingCount">0</span>
+                    <a href="#initial" class="nav-item" data-section="initial">
+                        <i class="fas fa-user-plus"></i>
+                        Initial Verifications
+                        <span class="badge" id="initialCount">0</span>
+                    </a>
+                    <a href="#resubmissions" class="nav-item" data-section="resubmissions">
+                        <i class="fas fa-redo"></i>
+                        Re-verification Queue
+                        <span class="badge" id="resubmissionCount">0</span>
                     </a>
                     <a href="#approved" class="nav-item" data-section="approved">
                         <i class="fas fa-check-circle"></i>
@@ -133,25 +138,25 @@
                     </div>
                 </section>
 
-                <!-- Pending Verifications Section -->
-                <section id="pending" class="content-section">
+                <!-- Initial Verifications Section -->
+                <section id="initial" class="content-section">
                     <div class="section-header">
-                        <h2>Pending Verifications</h2>
-                        <p>Review and process ID verification requests</p>
+                        <h2>Initial Verifications</h2>
+                        <p>New user verification requests</p>
                     </div>
                     
                     <div class="filters">
                         <div class="search-container">
-                            <input type="text" id="phoneSearch" placeholder="Search by phone number..." class="search-input">
-                            <button onclick="searchUserByPhone()" class="btn btn-primary">Search</button>
+                            <input type="text" id="initialPhoneSearch" placeholder="Search by phone number..." class="search-input">
+                            <button onclick="searchInitialUserByPhone()" class="btn btn-primary">Search</button>
                         </div>
-                        <select id="documentTypeFilter">
+                        <select id="initialDocumentTypeFilter">
                             <option value="">All Document Types</option>
                             <option value="aadhar">Aadhar Card</option>
                             <option value="pan">PAN Card</option>
                             <option value="driving">Driving License</option>
                         </select>
-                        <select id="dateFilter">
+                        <select id="initialDateFilter">
                             <option value="">All Dates</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
@@ -159,8 +164,39 @@
                         </select>
                     </div>
 
-                    <div class="verifications-list" id="pendingVerifications">
-                        <!-- Verification items will be populated here -->
+                    <div class="verifications-list" id="initialVerifications">
+                        <!-- Initial verification items will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Re-verification Queue Section -->
+                <section id="resubmissions" class="content-section">
+                    <div class="section-header">
+                        <h2>Re-verification Queue</h2>
+                        <p>Resubmitted verification requests</p>
+                    </div>
+                    
+                    <div class="filters">
+                        <div class="search-container">
+                            <input type="text" id="resubmissionPhoneSearch" placeholder="Search by phone number..." class="search-input">
+                            <button onclick="searchResubmissionUserByPhone()" class="btn btn-primary">Search</button>
+                        </div>
+                        <select id="resubmissionDocumentTypeFilter">
+                            <option value="">All Document Types</option>
+                            <option value="aadhar">Aadhar Card</option>
+                            <option value="pan">PAN Card</option>
+                            <option value="driving">Driving License</option>
+                        </select>
+                        <select id="resubmissionDateFilter">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+
+                    <div class="verifications-list" id="resubmissionVerifications">
+                        <!-- Resubmission verification items will be populated here -->
                     </div>
                 </section>
 

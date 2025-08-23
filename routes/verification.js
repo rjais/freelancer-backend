@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Verification = require('../models/Verification');
 const admin = require('../firebase-config');
 
 // Middleware to protect routes using Firebase ID token
@@ -52,6 +53,75 @@ router.get('/debug', async (req, res) => {
     }
 });
 
+// GET /api/verifications/initial - Get initial verifications
+router.get('/initial', async (req, res) => {
+    try {
+        const verifications = await Verification.find({ type: 'initial', status: 'pending' })
+            .populate('userId', 'name phone email')
+            .sort({ submittedAt: -1 });
+
+        res.json({
+            success: true,
+            verifications: verifications
+        });
+    } catch (error) {
+        console.error('Error fetching initial verifications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch initial verifications',
+            error: error.message
+        });
+    }
+});
+
+// GET /api/verifications/resubmissions - Get resubmission verifications
+router.get('/resubmissions', async (req, res) => {
+    try {
+        const verifications = await Verification.find({ type: 'resubmission', status: 'pending' })
+            .populate('userId', 'name phone email')
+            .sort({ submittedAt: -1 });
+
+        res.json({
+            success: true,
+            verifications: verifications
+        });
+    } catch (error) {
+        console.error('Error fetching resubmission verifications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch resubmission verifications',
+            error: error.message
+        });
+    }
+});
+
+// GET /api/verifications/:id - Get single verification
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            verification: verification
+        });
+    } catch (error) {
+        console.error('Error fetching verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch verification',
+            error: error.message
+        });
+    }
+});
+
 // POST /api/verifications - Submit verification (without Firebase auth for testing)
 router.post('/submit', async (req, res) => {
     try {
@@ -78,14 +148,46 @@ router.post('/submit', async (req, res) => {
         let user = await User.findOne({ phone: phone });
         
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found. Please register first.'
-            });
+            // Check if we should create a new user
+            if (req.body.createUser) {
+                console.log('Creating new user for phone:', phone);
+                
+                // Create new user
+                const userData = {
+                    phone: phone,
+                    role: req.body.role || 'freelancer',
+                    name: `${firstName} ${lastName}`,
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    dateOfBirth: dob,
+                    gender: gender,
+                    address: address,
+                    pincode: pincode,
+                    verificationStatus: verificationStatus || 'pending',
+                    isVerified: isVerified || false,
+                    submittedAt: submittedAt || new Date()
+                };
+                
+                user = new User(userData);
+                await user.save();
+                console.log('✅ Created new user:', user._id);
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found. Please register first.'
+                });
+            }
         }
 
-        // Update user with verification data
-        const updateData = {
+        // Determine if this is a resubmission
+        const isResubmission = user.verificationStatus === 'rejected' || user.resubmissionCount > 0;
+        
+        // Create a new verification entry
+        const verificationData = {
+            userId: user._id,
+            type: isResubmission ? 'resubmission' : 'initial',
+            status: 'pending',
             firstName: firstName,
             lastName: lastName,
             name: `${firstName} ${lastName}`,
@@ -95,9 +197,7 @@ router.post('/submit', async (req, res) => {
             gender: gender,
             address: address,
             pincode: pincode,
-            verificationStatus: verificationStatus || 'pending',
-            isVerified: isVerified || false,
-            submittedAt: submittedAt || new Date()
+            deliveryWork: req.body.deliveryWork || false
         };
 
         // Add documents if provided
@@ -105,7 +205,7 @@ router.post('/submit', async (req, res) => {
             console.log('Processing documents in submit route:', documents);
             
             // Initialize documents structure
-            updateData.documents = {
+            verificationData.documents = {
                 aadhaar: { front: null, back: null },
                 pan: { front: null },
                 drivingLicense: { front: null, back: null }
@@ -113,46 +213,60 @@ router.post('/submit', async (req, res) => {
             
             // Map document fields to the correct structure
             if (documents.profilePhoto) {
-                updateData.profileImage = documents.profilePhoto;
+                verificationData.profileImage = documents.profilePhoto;
                 console.log('Profile photo saved:', documents.profilePhoto);
             }
             if (documents.aadharFront) {
-                updateData.documents.aadhaar.front = documents.aadharFront;
+                verificationData.documents.aadhaar.front = documents.aadharFront;
                 console.log('Aadhar front saved:', documents.aadharFront);
             }
             if (documents.aadharBack) {
-                updateData.documents.aadhaar.back = documents.aadharBack;
+                verificationData.documents.aadhaar.back = documents.aadharBack;
                 console.log('Aadhar back saved:', documents.aadharBack);
             }
             if (documents.panCard) {
-                updateData.documents.pan.front = documents.panCard;
+                verificationData.documents.pan.front = documents.panCard;
                 console.log('PAN card saved:', documents.panCard);
             }
             if (documents.drivingLicenseFront) {
-                updateData.documents.drivingLicense.front = documents.drivingLicenseFront;
+                verificationData.documents.drivingLicense.front = documents.drivingLicenseFront;
                 console.log('Driving license front saved:', documents.drivingLicenseFront);
             }
             if (documents.drivingLicenseBack) {
-                updateData.documents.drivingLicense.back = documents.drivingLicenseBack;
+                verificationData.documents.drivingLicense.back = documents.drivingLicenseBack;
                 console.log('Driving license back saved:', documents.drivingLicenseBack);
             }
             
-            console.log('Final documents structure:', updateData.documents);
+            console.log('Final documents structure:', verificationData.documents);
         }
 
-        // Update the user
+        // Create the verification entry
+        const verification = new Verification(verificationData);
+        await verification.save();
+
+        // Update user status to pending (but don't update documents yet)
+        const userUpdateData = {
+            verificationStatus: 'pending',
+            isVerified: false
+        };
+
+        if (isResubmission) {
+            userUpdateData.resubmissionCount = (user.resubmissionCount || 0) + 1;
+        }
+
         const updatedUser = await User.findByIdAndUpdate(
             user._id,
-            updateData,
+            userUpdateData,
             { new: true, runValidators: true }
         );
 
-        console.log('Verification submitted for user:', updatedUser._id);
+        console.log(`${isResubmission ? 'Re-verification' : 'Verification'} submitted for user:`, updatedUser._id);
 
         res.json({
             success: true,
-            message: 'Verification submitted successfully',
-            user: updatedUser
+            message: isResubmission ? 'Re-verification submitted successfully' : 'Verification submitted successfully',
+            user: updatedUser,
+            verificationId: verification._id
         });
 
     } catch (error) {
@@ -160,6 +274,128 @@ router.post('/submit', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to submit verification',
+            error: error.message
+        });
+    }
+});
+
+// POST /api/verifications/:id/approve - Approve verification
+router.post('/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { adminComments } = req.body;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        // Update verification status
+        verification.status = 'approved';
+        verification.adminComments = adminComments;
+        verification.reviewedAt = new Date();
+        await verification.save();
+
+        // Update user status and documents
+        const userUpdateData = {
+            verificationStatus: 'approved',
+            isVerified: true,
+            adminComments: adminComments
+        };
+
+        // Copy documents from verification to user
+        if (verification.documents) {
+            userUpdateData.documents = verification.documents;
+        }
+        if (verification.profileImage) {
+            userUpdateData.profileImage = verification.profileImage;
+        }
+
+        await User.findByIdAndUpdate(verification.userId, userUpdateData);
+
+        res.json({
+            success: true,
+            message: 'Verification approved successfully'
+        });
+    } catch (error) {
+        console.error('Error approving verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to approve verification',
+            error: error.message
+        });
+    }
+});
+
+// POST /api/verifications/:id/reject - Reject verification
+router.post('/:id/reject', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { adminComments } = req.body;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        // Update verification status
+        verification.status = 'rejected';
+        verification.adminComments = adminComments;
+        verification.reviewedAt = new Date();
+        await verification.save();
+
+        // Update user status
+        await User.findByIdAndUpdate(verification.userId, {
+            verificationStatus: 'rejected',
+            isVerified: false,
+            adminComments: adminComments
+        });
+
+        res.json({
+            success: true,
+            message: 'Verification rejected successfully'
+        });
+    } catch (error) {
+        console.error('Error rejecting verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to reject verification',
+            error: error.message
+        });
+    }
+});
+
+// DELETE /api/verifications/:id - Delete verification
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        // Delete the verification
+        await Verification.findByIdAndDelete(id);
+
+        res.json({
+            success: true,
+            message: 'Verification deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete verification',
             error: error.message
         });
     }

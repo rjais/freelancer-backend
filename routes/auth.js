@@ -107,116 +107,52 @@ router.post('/firebase', async (req, res) => {
     let user = await User.findOne({ phone: phone_number });
     let isNewUser = false;
     
-    // Check if this is a login attempt (user doesn't exist)
-    const action = req.body.action || 'signup'; // Default to signup for backward compatibility
+    // Check if this is a login attempt or account creation
+    const action = req.body.action || 'login'; // Default to login for security
     
     if (!user) {
-      if (action === 'login') {
-        // For login, don't create a new user - return 404
-        console.log('❌ Login attempt with non-existent user:', phone_number);
-        return res.status(404).json({ 
-          message: 'No user found with this phone number. Please create an account first.',
-          error: 'User not found'
-        });
-      }
-      
-      // Create new user if doesn't exist (for signup)
-      try {
-        // Create user data without email field to avoid unique constraint issues
+      if (action === 'signup') {
+        // Create new user for account creation flow
+        console.log('📝 Creating new user for account creation:', phone_number);
+        
         const userData = {
           firebaseUid: uid,
           phone: phone_number,
           role: role,
-          name: `User ${phone_number.slice(-6)}`, // Generate a default name
+          name: `User ${phone_number.slice(-6)}`,
           isVerified: false,
           verificationStatus: 'pending',
-          verificationMethod: 'pending' // Set verification method to pending
+          verificationMethod: 'pending'
         };
         
-        console.log('Creating user with data:', userData);
         user = new User(userData);
         await user.save();
         isNewUser = true;
-        console.log('✅ Created NEW user:', user._id, 'Phone:', phone_number, 'Role:', role);
-        console.log('User creation successful, proceeding to token generation');
-      } catch (saveError) {
-        console.log('Save error details:', {
-          code: saveError.code,
-          keyPattern: saveError.keyPattern,
-          message: saveError.message,
-          errors: saveError.errors,
-          name: saveError.name,
-          stack: saveError.stack
+        console.log('✅ Created new user for account creation:', user._id);
+      } else {
+        // Login attempt with non-existent user
+        console.log('❌ No user found in database:', phone_number);
+        return res.status(404).json({ 
+          message: 'Create account first to login',
+          error: 'User not found'
         });
-        
-        if (saveError.code === 11000) {
-          if (saveError.keyPattern && saveError.keyPattern.phone) {
-            // Duplicate phone number - user was created in another request
-            console.log('⚠️ Duplicate phone number detected, finding existing user');
-            user = await User.findOne({ phone: phone_number });
-            if (user) {
-              console.log('✅ Found existing user after duplicate error:', user._id);
-            } else {
-              console.log('❌ User not found after duplicate phone error - phone:', phone_number);
-              throw new Error('Failed to create or find user with this phone number - duplicate phone but user not found');
-            }
-          } else if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
-            // Duplicate Firebase UID - find user by phone instead
-            console.log('⚠️ Duplicate Firebase UID detected, finding user by phone');
-            user = await User.findOne({ phone: phone_number });
-            if (user) {
-              console.log('✅ Found existing user by phone after Firebase UID duplicate:', user._id);
-              // Update the Firebase UID to match
-              user.firebaseUid = uid;
-              await user.save();
-            } else {
-              console.log('❌ User not found after duplicate Firebase UID error - phone:', phone_number);
-              throw new Error('Failed to create or find user with this phone number - duplicate Firebase UID but user not found');
-            }
-          } else if (saveError.keyPattern && saveError.keyPattern.email) {
-            // Duplicate email - this shouldn't happen since we don't generate emails anymore
-            console.log('⚠️ Unexpected duplicate email error - this should not happen');
-            console.log('Attempting to find user by phone number as fallback');
-            user = await User.findOne({ phone: phone_number });
-            if (user) {
-              console.log('✅ Found existing user by phone after unexpected email duplicate:', user._id);
-            } else {
-              console.log('❌ No user found - this might be a database inconsistency');
-              // Instead of throwing an error, try to create the user again without any email field
-              console.log('Attempting to create user again without email field');
-              // Retry user creation without email field
-              const retryUserData = {
-                firebaseUid: uid,
-                phone: phone_number,
-                role: role,
-                name: `User ${phone_number.slice(-6)}`,
-                isVerified: false,
-                verificationStatus: 'pending',
-                verificationMethod: 'pending'
-              };
-              user = new User(retryUserData);
-              await user.save();
-              isNewUser = true;
-              console.log('✅ Successfully created user on retry:', user._id);
-            }
-          } else {
-            throw saveError;
-          }
-        } else {
-          console.log('Non-duplicate key error:', saveError);
-          console.log('Error type:', typeof saveError);
-          console.log('Error constructor:', saveError.constructor.name);
-          
-          // If it's a validation error, provide a more specific message
-          if (saveError.name === 'ValidationError') {
-            console.log('Validation error details:', saveError.errors);
-            throw new Error(`Validation failed: ${Object.keys(saveError.errors).join(', ')}`);
-          }
-          
-          throw saveError;
-        }
       }
     } else {
+      // User exists - check their verification status for login
+      console.log('✅ User found:', user._id, 'Phone:', phone_number, 'Status:', user.verificationStatus);
+      
+      if (action === 'login') {
+        // Only allow login if user has submitted verification (pending) or is verified (approved)
+        if (user.verificationStatus === 'rejected' || !user.verificationStatus) {
+          console.log('❌ User cannot login - status:', user.verificationStatus);
+          return res.status(403).json({ 
+            message: 'Create account first to login',
+            error: 'Account not verified',
+            verificationStatus: user.verificationStatus
+          });
+        }
+      }
+      
       // User exists - update firebaseUid if needed and role
       console.log('🔄 Existing user found:', user._id, 'Phone:', phone_number, 'Current role:', user.role, 'Requested role:', role);
       
