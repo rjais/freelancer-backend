@@ -666,6 +666,8 @@
         }
         
         function switchTab(tab) {
+            console.log(`🔄 Switching to tab: ${tab}`);
+            
             // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
@@ -678,15 +680,19 @@
             
             // Load appropriate data
             if (tab === 'all') {
+                console.log('📋 Loading all users...');
                 loadUsers();
             } else if (tab === 'initial') {
+                console.log('📋 Loading initial verifications...');
                 loadInitialVerifications();
             } else if (tab === 'resubmissions') {
+                console.log('📋 Loading resubmission verifications...');
                 loadResubmissionVerifications();
             }
         }
         
         async function loadUsers() {
+            console.log('🔄 Loading users...');
             const usersList = document.getElementById('usersList');
             usersList.innerHTML = '<div class="loading">Loading users...</div>';
             
@@ -695,12 +701,16 @@
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
+                console.log('📡 Response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
+                console.log('📋 Response data:', data);
                 const users = data.verifications || [];
+                console.log(`👥 Found ${users.length} users`);
                 
                 // Update stats
                 const pending = users.filter(u => u.verificationStatus === 'pending').length;

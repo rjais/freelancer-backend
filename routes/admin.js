@@ -128,15 +128,18 @@ router.get('/users', authenticateAdmin, async (req, res) => {
             });
         }
         
-        let query = { role: 'freelancer' };
+        let query = {};
         if (verificationStatus) {
             query.verificationStatus = verificationStatus;
         }
         
-        // Get users from your database
+        // Get all users from your database (not just freelancers)
         const users = await User.find(query)
-            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId resubmissionCount')
+            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId resubmissionCount role')
             .sort({ createdAt: -1 });
+        
+        console.log(`🔍 Admin users endpoint: Found ${users.length} users`);
+        console.log('📋 Users:', users.map(u => ({ id: u._id, name: u.name, status: u.verificationStatus, role: u.role })));
         
         res.json({
             success: true,
