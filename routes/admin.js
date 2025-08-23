@@ -671,6 +671,37 @@ router.delete('/verifications/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Get verification data for a specific user
+router.get('/verifications/user/:userId', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const { userId } = req.params;
+
+        // Find the most recent verification for this user
+        const verification = await Verification.findOne({ userId: userId })
+            .sort({ submittedAt: -1 });
+
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'No verification found for this user'
+            });
+        }
+
+        res.json({
+            success: true,
+            verification: verification
+        });
+    } catch (error) {
+        console.error('Error fetching user verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user verification',
+            error: error.message
+        });
+    }
+});
+
 // Additional routes can be added here as needed
 
 module.exports = router;

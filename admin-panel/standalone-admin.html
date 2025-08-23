@@ -1041,19 +1041,31 @@
             currentUserId = userId;
             
             try {
-                const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/users/${userId}`, {
+                // First, get user details
+                const userResponse = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/users/${userId}`, {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (!userResponse.ok) {
+                    throw new Error(`HTTP ${userResponse.status}: ${userResponse.statusText}`);
                 }
                 
-                const data = await response.json();
-                const user = data.user || data;
+                const userData = await userResponse.json();
+                const user = userData.user || userData;
                 
-                // Load user details in modal
-                loadUserDetailsInModal(user);
+                // Then, get verification details (which contain the documents)
+                const verificationResponse = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/user/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                let verification = null;
+                if (verificationResponse.ok) {
+                    const verificationData = await verificationResponse.json();
+                    verification = verificationData.verification;
+                }
+                
+                // Load user details in modal with verification data
+                loadUserDetailsInModal(user, verification);
                 
                 // Show modal
                 document.getElementById('verificationModal').style.display = 'block';
@@ -1064,7 +1076,7 @@
             }
         }
         
-        function loadUserDetailsInModal(user) {
+        function loadUserDetailsInModal(user, verification = null) {
             const userDetails = document.getElementById('userDetails');
             const documentsGrid = document.getElementById('documentsGrid');
             
@@ -1109,12 +1121,18 @@
                 </div>
             `;
             
-            // Load documents
-            const documents = user.documents || {};
+            // Load documents - use verification data if available, otherwise fall back to user data
+            const documents = verification?.documents || user.documents || {};
+            const profileImage = verification?.profileImage || user.profileImage;
             documentsGrid.innerHTML = '';
             
+            console.log('📋 Loading documents for user:', user._id);
+            console.log('📋 Verification data:', verification);
+            console.log('📋 Documents:', documents);
+            console.log('📋 Profile image:', profileImage);
+            
             // Profile Photo
-            if (user.profileImage) {
+            if (profileImage) {
                 documentsGrid.innerHTML += `
                     <div class="document-item">
                         <h4>Profile Photo</h4>
