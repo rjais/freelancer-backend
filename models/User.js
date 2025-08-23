@@ -35,6 +35,7 @@ const UserSchema = new mongoose.Schema({
     default: 'pending' 
   },
   resubmissionCount: { type: Number, default: 0 }, // Track number of resubmissions
+  adminComments: { type: String }, // Admin comments for rejection/approval
   
   // Manual Document Verification Fields
   documents: {
