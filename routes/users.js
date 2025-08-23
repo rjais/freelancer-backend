@@ -478,4 +478,53 @@ router.get('/:id/documents', firebaseAuth, async (req, res) => {
   }
 });
 
+// Resubmit verification endpoint
+router.post('/:id/resubmit-verification', firebaseAuth, async (req, res) => {
+  try {
+    // Only allow users to resubmit their own verification
+    if (req.params.id !== req.user.mongoId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to resubmit verification for this user' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user is currently rejected
+    if (user.verificationStatus !== 'rejected') {
+      return res.status(400).json({ message: 'User is not in rejected status' });
+    }
+
+    // Reset verification status to pending and increment resubmission count
+    const updateData = {
+      verificationStatus: 'pending',
+      isVerified: false,
+      rejectedAt: null,
+      adminComments: null,
+      resubmissionCount: (user.resubmissionCount || 0) + 1
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    console.log('User verification resubmitted:', {
+      userId: req.params.id,
+      newStatus: 'pending'
+    });
+
+    res.json({
+      success: true,
+      message: 'Verification resubmitted successfully',
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error('Error in POST /api/users/:id/resubmit-verification:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;

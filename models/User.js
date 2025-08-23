@@ -34,6 +34,7 @@ const UserSchema = new mongoose.Schema({
     enum: ['pending', 'verified', 'rejected', 'expired'], 
     default: 'pending' 
   },
+  resubmissionCount: { type: Number, default: 0 }, // Track number of resubmissions
   
   // Manual Document Verification Fields
   documents: {

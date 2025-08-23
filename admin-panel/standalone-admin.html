@@ -599,7 +599,9 @@
                                 ${user.verificationStatus.charAt(0).toUpperCase() + user.verificationStatus.slice(1)}
                             </span>
                             ${user.verificationStatus === 'pending' ? `
-                                <button class="btn btn-warning" onclick="verifyUser('${user._id}')">Verify</button>
+                                <button class="btn btn-warning" onclick="verifyUser('${user._id}')">
+                                    ${user.resubmissionCount && user.resubmissionCount > 0 ? 'Re-Verify' : 'Verify'}
+                                </button>
                             ` : ''}
                             <button class="btn btn-danger" onclick="deleteUser('${user._id}', '${userName}')">Delete</button>
                         </div>

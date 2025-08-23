@@ -130,7 +130,7 @@ router.get('/users', authenticateAdmin, async (req, res) => {
         
         // Get users from your database
         const users = await User.find(query)
-            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId')
+            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId resubmissionCount')
             .sort({ createdAt: -1 });
         
         res.json({
@@ -149,7 +149,7 @@ router.get('/users', authenticateAdmin, async (req, res) => {
 router.get('/users/:id', authenticateAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
-            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId');
+            .select('name email phone verificationStatus isVerified createdAt profileImage documents address pincode dateOfBirth gender firstName lastName freelancerId resubmissionCount');
         
         if (!user) {
             return res.status(404).json({
@@ -381,6 +381,50 @@ router.patch('/users/:id/verification-status', authenticateAdmin, async (req, re
         res.status(500).json({
             success: false,
             message: 'Failed to update verification status'
+        });
+    }
+});
+
+// Resubmit Verification Endpoint
+router.post('/users/:id/resubmit-verification', authenticateAdmin, async (req, res) => {
+    try {
+        console.log('Resubmit verification request for user:', req.params.id);
+        
+        const user = await User.findById(req.params.id);
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        // Reset verification status to pending
+        const updateData = {
+            verificationStatus: 'pending',
+            isVerified: false,
+            rejectedAt: null,
+            adminComments: null
+        };
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true }
+        );
+        
+        console.log('User verification status reset to pending:', req.params.id);
+        
+        res.json({
+            success: true,
+            message: 'Verification resubmitted successfully',
+            verification: updatedUser
+        });
+    } catch (error) {
+        console.error('Error resubmitting verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to resubmit verification'
         });
     }
 });
