@@ -644,7 +644,7 @@
         async function loadBadgeCounts() {
             try {
                 // Load initial verification count
-                const initialResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/verifications/initial', {
+                const initialResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/verifications/initial', {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 if (initialResponse.ok) {
@@ -653,7 +653,7 @@
                 }
                 
                 // Load resubmission count
-                const resubmissionResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/verifications/resubmissions', {
+                const resubmissionResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/verifications/resubmissions', {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 if (resubmissionResponse.ok) {
