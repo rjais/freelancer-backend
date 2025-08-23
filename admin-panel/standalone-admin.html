@@ -771,7 +771,7 @@
             usersList.innerHTML = '<div class="loading">Loading initial verifications...</div>';
             
             try {
-                const response = await fetch('https://freelancer-backend-jv21.onrender.com/api/verifications/initial', {
+                const response = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/verifications/initial', {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
@@ -828,7 +828,7 @@
             usersList.innerHTML = '<div class="loading">Loading resubmission verifications...</div>';
             
             try {
-                const response = await fetch('https://freelancer-backend-jv21.onrender.com/api/verifications/resubmissions', {
+                const response = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/verifications/resubmissions', {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
@@ -884,7 +884,7 @@
             currentUserId = verificationId;
             
             try {
-                const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/verifications/${verificationId}`, {
+                const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${verificationId}`, {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 
@@ -1193,7 +1193,7 @@
                 let response;
                 if (isFromQueue) {
                     // This is a verification from the queue
-                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/verifications/${currentUserId}/approve`, {
+                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentUserId}/approve`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1260,7 +1260,7 @@
                 let response;
                 if (isFromQueue) {
                     // This is a verification from the queue
-                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/verifications/${currentUserId}/reject`, {
+                    response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${currentUserId}/reject`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1339,7 +1339,7 @@
             }
             
             try {
-                const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/verifications/${verificationId}`, {
+                const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${verificationId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });

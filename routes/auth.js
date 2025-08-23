@@ -127,67 +127,21 @@ router.post('/firebase', async (req, res) => {
     
     if (!user) {
       if (action === 'signup') {
-        // Create new user for account creation flow
-        console.log('📝 Creating new user for account creation:', phone_number);
+        // For signup action, don't create user in database yet
+        // User will be created only when they submit verification documents
+        console.log('📝 Signup action detected - user will be created during verification submission');
         
-        // Check if Firebase UID already exists
-        const existingUserWithUid = await User.findOne({ firebaseUid: uid });
-        if (existingUserWithUid) {
-          console.log('⚠️ Firebase UID already exists, updating existing user instead');
-          user = existingUserWithUid;
-          
-          // Update phone number if different
-          if (user.phone !== phone_number) {
-            user.phone = phone_number;
-          }
-          
-          // Update role if different
-          if (user.role !== role) {
-            user.role = role;
-          }
-          
-          await user.save();
-          console.log('✅ Updated existing user with new phone/role:', user._id);
-        } else {
-          // Create completely new user
-          const userData = {
-            firebaseUid: uid,
-            phone: phone_number,
-            role: role,
-            name: `User ${phone_number.slice(-6)}`,
-            isVerified: false,
-            verificationStatus: 'pending',
-            verificationMethod: 'pending'
-          };
-          
-          user = new User(userData);
-          try {
-            await user.save();
-            isNewUser = true;
-            console.log('✅ Created new user for account creation:', user._id);
-          } catch (saveError) {
-            console.error('❌ Error creating new user:', saveError);
-            
-            // Handle duplicate key errors
-            if (saveError.code === 11000) {
-              console.log('🔄 Duplicate key error during user creation, trying to resolve...');
-              
-              // If it's a firebaseUid duplicate, try without it
-              if (saveError.keyPattern && saveError.keyPattern.firebaseUid) {
-                console.log('🔄 Creating user without firebaseUid to avoid conflict...');
-                userData.firebaseUid = undefined;
-                user = new User(userData);
-                await user.save();
-                isNewUser = true;
-                console.log('✅ Created new user without firebaseUid:', user._id);
-              } else {
-                throw saveError; // Re-throw if it's not a firebaseUid issue
-              }
-            } else {
-              throw saveError; // Re-throw other errors
-            }
-          }
-        }
+        // Return a temporary user object for the frontend
+        user = {
+          _id: null, // No database ID yet
+          phone: phone_number,
+          role: role,
+          firebaseUid: uid,
+          isNewUser: true,
+          verificationStatus: null, // No status yet
+          isVerified: false
+        };
+        isNewUser = true;
       } else {
         // Login attempt with non-existent user
         console.log('❌ No user found in database:', phone_number);

@@ -429,6 +429,232 @@ router.post('/users/:id/resubmit-verification', authenticateAdmin, async (req, r
     }
 });
 
+// Get Initial Verifications (Admin endpoint)
+router.get('/verifications/initial', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const verifications = await Verification.find({ type: 'initial', status: 'pending' })
+            .populate('userId', 'name phone email')
+            .sort({ submittedAt: -1 });
+
+        res.json({
+            success: true,
+            verifications: verifications
+        });
+    } catch (error) {
+        console.error('Error fetching initial verifications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch initial verifications',
+            error: error.message
+        });
+    }
+});
+
+// Get Resubmission Verifications (Admin endpoint)
+router.get('/verifications/resubmissions', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const verifications = await Verification.find({ type: 'resubmission', status: 'pending' })
+            .populate('userId', 'name phone email')
+            .sort({ submittedAt: -1 });
+
+        res.json({
+            success: true,
+            verifications: verifications
+        });
+    } catch (error) {
+        console.error('Error fetching resubmission verifications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch resubmission verifications',
+            error: error.message
+        });
+    }
+});
+
+// Get Single Verification (Admin endpoint)
+router.get('/verifications/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const { id } = req.params;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            verification: verification
+        });
+    } catch (error) {
+        console.error('Error fetching verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch verification',
+            error: error.message
+        });
+    }
+});
+
+// Approve Verification (Admin endpoint)
+router.post('/verifications/:id/approve', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const { id } = req.params;
+        const { adminComments } = req.body;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        // Update verification status
+        verification.status = 'approved';
+        verification.adminComments = adminComments;
+        verification.reviewedAt = new Date();
+        await verification.save();
+
+        // Update user with verification data
+        const user = await User.findById(verification.userId);
+        if (user) {
+            // Copy verification data to user
+            user.name = verification.name;
+            user.firstName = verification.firstName;
+            user.lastName = verification.lastName;
+            user.email = verification.email;
+            user.dateOfBirth = verification.dateOfBirth;
+            user.gender = verification.gender;
+            user.address = verification.address;
+            user.pincode = verification.pincode;
+            user.profileImage = verification.profileImage;
+            user.documents = verification.documents;
+            user.deliveryWork = verification.deliveryWork;
+            user.verificationStatus = 'approved';
+            user.isVerified = true;
+            user.verifiedAt = new Date();
+            user.adminComments = adminComments;
+
+            // Generate Freelancer ID if not exists
+            if (!user.freelancerId) {
+                const generateFreelancerId = async () => {
+                    let freelancerId;
+                    let isUnique = false;
+                    
+                    while (!isUnique) {
+                        freelancerId = Math.floor(Math.random() * 900000000) + 10000; // 5-9 digits
+                        freelancerId = freelancerId.toString();
+                        
+                        const existingUser = await User.findOne({ freelancerId });
+                        if (!existingUser) {
+                            isUnique = true;
+                        }
+                    }
+                    
+                    return freelancerId;
+                };
+                
+                user.freelancerId = await generateFreelancerId();
+            }
+
+            await user.save();
+        }
+
+        res.json({
+            success: true,
+            message: 'Verification approved successfully',
+            verification: verification
+        });
+    } catch (error) {
+        console.error('Error approving verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to approve verification',
+            error: error.message
+        });
+    }
+});
+
+// Reject Verification (Admin endpoint)
+router.post('/verifications/:id/reject', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const { id } = req.params;
+        const { adminComments } = req.body;
+
+        const verification = await Verification.findById(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        // Update verification status
+        verification.status = 'rejected';
+        verification.adminComments = adminComments;
+        verification.reviewedAt = new Date();
+        await verification.save();
+
+        // Update user status
+        const user = await User.findById(verification.userId);
+        if (user) {
+            user.verificationStatus = 'rejected';
+            user.isVerified = false;
+            user.adminComments = adminComments;
+            await user.save();
+        }
+
+        res.json({
+            success: true,
+            message: 'Verification rejected successfully',
+            verification: verification
+        });
+    } catch (error) {
+        console.error('Error rejecting verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to reject verification',
+            error: error.message
+        });
+    }
+});
+
+// Delete Verification (Admin endpoint)
+router.delete('/verifications/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const Verification = require('../models/Verification');
+        const { id } = req.params;
+
+        const verification = await Verification.findByIdAndDelete(id);
+        if (!verification) {
+            return res.status(404).json({
+                success: false,
+                message: 'Verification not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Verification deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting verification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete verification',
+            error: error.message
+        });
+    }
+});
+
 // Additional routes can be added here as needed
 
 module.exports = router;
