@@ -146,11 +146,14 @@ router.post('/submit', async (req, res) => {
 
         // Find existing user by phone number
         let user = await User.findOne({ phone: phone });
+        console.log('🔍 Looking for user with phone:', phone);
+        console.log('🔍 User found:', user ? user._id : 'No user found');
+        console.log('🔍 createUser flag:', req.body.createUser);
         
         if (!user) {
             // Check if we should create a new user
             if (req.body.createUser) {
-                console.log('Creating new user for phone:', phone);
+                console.log('✅ Creating new user for phone:', phone);
                 
                 // Create new user
                 const userData = {
