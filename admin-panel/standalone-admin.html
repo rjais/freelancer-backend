@@ -955,6 +955,12 @@
         async function verifyUserFromQueue(verificationId, type) {
             currentVerificationId = verificationId;
             currentUserId = null; // Reset user ID
+            console.log('🔍 verifyUserFromQueue called:', {
+                verificationId: verificationId,
+                type: type,
+                currentVerificationId: currentVerificationId,
+                currentUserId: currentUserId
+            });
             
             try {
                 const response = await fetch(`https://freelancer-backend-jv21.onrender.com/api/admin/verifications/${verificationId}`, {
@@ -1273,6 +1279,11 @@
             try {
                 // Check if this is a verification from queue or regular user
                 const isFromQueue = currentVerificationId !== null;
+                console.log('🔍 Approval debug:', {
+                    currentUserId: currentUserId,
+                    currentVerificationId: currentVerificationId,
+                    isFromQueue: isFromQueue
+                });
                 
                 let response;
                 if (isFromQueue) {
@@ -1340,6 +1351,11 @@
             try {
                 // Check if this is a verification from queue or regular user
                 const isFromQueue = currentVerificationId !== null;
+                console.log('🔍 Rejection debug:', {
+                    currentUserId: currentUserId,
+                    currentVerificationId: currentVerificationId,
+                    isFromQueue: isFromQueue
+                });
                 
                 let response;
                 if (isFromQueue) {
