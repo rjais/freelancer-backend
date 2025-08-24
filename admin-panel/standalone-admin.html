@@ -794,13 +794,19 @@
                 users.forEach((user, index) => {
                     console.log(`👤 Processing user ${index + 1}:`, user.displayName || user.name || user.fullName || 'Unknown');
                     console.log(`🔍 User ${index + 1} full data:`, user);
+                    
+                    // Temporary fallback: if displayName doesn't exist, use name
                     const userName = user.displayName || user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    
+                    // Add a note if this is a resubmission
+                    const isResubmission = user.resubmissionCount && user.resubmissionCount > 0;
+                    const displayName = isResubmission ? `${userName} (Resubmitted)` : userName;
                     const userItem = document.createElement('div');
                     userItem.className = 'user-item';
                     
                     userItem.innerHTML = `
                         <div class="user-info">
-                            <h3>${userName}</h3>
+                            <h3>${displayName}</h3>
                             <p>${user.email || 'No email'} • ${user.phone || 'No phone'} • ID: ${user._id}</p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
