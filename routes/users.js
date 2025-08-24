@@ -497,11 +497,12 @@ router.post('/:id/resubmit-verification', firebaseAuth, async (req, res) => {
     }
 
     // Reset verification status to pending and increment resubmission count
+    // Keep admin comments so user can see rejection reason
     const updateData = {
       verificationStatus: 'pending',
       isVerified: false,
       rejectedAt: null,
-      adminComments: null,
+      // Don't clear adminComments - keep them for user reference
       resubmissionCount: (user.resubmissionCount || 0) + 1
     };
 
