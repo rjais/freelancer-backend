@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Admin Panel - Updated</title>
+    <title>Standalone Admin Panel - Production v2.0</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -583,10 +586,11 @@
         </div>
     </div>
 
-    <script>
-        let adminToken = null;
-        let currentUserId = null;
-        let currentVerificationId = null;
+            <script>
+            // Production v2.0 - Admin Panel with Resubmission Support
+            let adminToken = null;
+            let currentUserId = null;
+            let currentVerificationId = null;
         
         // Check API status on page load
         window.addEventListener('load', () => {
