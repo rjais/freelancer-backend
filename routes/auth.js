@@ -155,9 +155,10 @@ router.post('/firebase', async (req, res) => {
       console.log('✅ User found:', user._id, 'Phone:', phone_number, 'Status:', user.verificationStatus);
       
       if (action === 'login') {
-        // Only allow login if user has submitted verification (pending) or is verified (approved)
-        if (user.verificationStatus === 'rejected' || !user.verificationStatus) {
-          console.log('❌ User cannot login - status:', user.verificationStatus);
+        // Allow login for all users, including rejected ones (so they can see rejection modal)
+        // Only block users who haven't submitted verification yet
+        if (!user.verificationStatus) {
+          console.log('❌ User cannot login - no verification status:', user.verificationStatus);
           return res.status(403).json({ 
             message: 'Create account first to login',
             error: 'Account not verified',
