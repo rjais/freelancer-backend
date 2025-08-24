@@ -496,12 +496,10 @@ router.post('/:id/resubmit-verification', firebaseAuth, async (req, res) => {
       return res.status(400).json({ message: 'User is not in rejected status' });
     }
 
-    // Reset verification status to pending and increment resubmission count
-    // Keep admin comments so user can see rejection reason
+    // Don't change status yet - just increment resubmission count
+    // Status will change to 'pending' when user actually submits new verification documents
     const updateData = {
-      verificationStatus: 'pending',
-      isVerified: false,
-      rejectedAt: null,
+      // Keep status as 'rejected' until actual resubmission
       // Don't clear adminComments - keep them for user reference
       resubmissionCount: (user.resubmissionCount || 0) + 1
     };
