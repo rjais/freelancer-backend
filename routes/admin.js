@@ -141,9 +141,58 @@ router.get('/users', authenticateAdmin, async (req, res) => {
         console.log(`🔍 Admin users endpoint: Found ${users.length} users`);
         console.log('📋 Users:', users.map(u => ({ id: u._id, name: u.name, status: u.verificationStatus, role: u.role })));
         
+        // Debug: Log the first user with verification data
+        if (users.length > 0) {
+            const firstUser = users[0];
+            console.log('🔍 First user before verification lookup:', firstUser.name);
+        }
+        
+        // Get the most recent verification data for each user
+        const Verification = require('../models/Verification');
+        const usersWithVerification = await Promise.all(users.map(async (user) => {
+            try {
+                const latestVerification = await Verification.findOne({ userId: user._id })
+                    .sort({ submittedAt: -1 });
+                
+                // If there's verification data, use it to update the display information
+                if (latestVerification) {
+                    console.log(`🔍 User ${user.name} has verification data:`, latestVerification.name);
+                    return {
+                        ...user.toObject(),
+                        displayName: latestVerification.name || user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                        displayDob: latestVerification.dateOfBirth || user.dob || user.dateOfBirth,
+                        displayGender: latestVerification.gender || user.gender,
+                        displayAddress: latestVerification.address || user.address,
+                        displayPincode: latestVerification.pincode || user.pincode,
+                        latestVerification: latestVerification
+                    };
+                } else {
+                    console.log(`🔍 User ${user.name} has no verification data, using user data`);
+                    return {
+                        ...user.toObject(),
+                        displayName: user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                        displayDob: user.dob || user.dateOfBirth,
+                        displayGender: user.gender,
+                        displayAddress: user.address,
+                        displayPincode: user.pincode
+                    };
+                }
+            } catch (error) {
+                console.log('Error fetching verification for user:', user._id, error.message);
+                return {
+                    ...user.toObject(),
+                    displayName: user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                    displayDob: user.dob || user.dateOfBirth,
+                    displayGender: user.gender,
+                    displayAddress: user.address,
+                    displayPincode: user.pincode
+                };
+            }
+        }));
+        
         res.json({
             success: true,
-            verifications: users // Admin panel expects this structure
+            verifications: usersWithVerification // Admin panel expects this structure
         });
     } catch (error) {
         res.status(500).json({

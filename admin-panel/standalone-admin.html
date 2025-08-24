@@ -792,8 +792,9 @@
                 }
                 
                 users.forEach((user, index) => {
-                    console.log(`👤 Processing user ${index + 1}:`, user.name || user.fullName || 'Unknown');
-                    const userName = user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
+                    console.log(`👤 Processing user ${index + 1}:`, user.displayName || user.name || user.fullName || 'Unknown');
+                    console.log(`🔍 User ${index + 1} full data:`, user);
+                    const userName = user.displayName || user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User';
                     const userItem = document.createElement('div');
                     userItem.className = 'user-item';
                     
@@ -1041,8 +1042,7 @@
                 </div>
             `;
             
-            // Load documents
-            loadDocumentsInModal(verification.documents, verification.profileImage);
+            // Documents are loaded in loadUserDetailsInModal function
         }
         
         async function verifyUser(userId) {
@@ -1079,6 +1079,13 @@
             const userDetails = document.getElementById('userDetails');
             const documentsGrid = document.getElementById('documentsGrid');
             
+            // Prioritize verification data over user data for resubmissions
+            const displayName = verification?.name || user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Not provided';
+            const displayDob = verification?.dateOfBirth || user.dob || user.dateOfBirth || 'Not provided';
+            const displayGender = verification?.gender || user.gender || 'Not provided';
+            const displayAddress = verification?.address || user.address || 'Not provided';
+            const displayPincode = verification?.pincode || user.pincode || 'Not provided';
+            
             // Load user details
             userDetails.innerHTML = `
                 <div class="user-details">
@@ -1086,7 +1093,7 @@
                         <h3>Personal Information</h3>
                         <div class="detail-item">
                             <div class="detail-label">Full Name</div>
-                            <div class="detail-value">${user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Not provided'}</div>
+                            <div class="detail-value">${displayName}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Email</div>
@@ -1098,23 +1105,23 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Date of Birth</div>
-                            <div class="detail-value">${user.dob || user.dateOfBirth || 'Not provided'}</div>
+                            <div class="detail-value">${displayDob}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Gender</div>
-                            <div class="detail-value">${user.gender || 'Not provided'}</div>
+                            <div class="detail-value">${displayGender}</div>
                         </div>
                     </div>
                     <div class="detail-section">
                         <h3>Address Information</h3>
                         <div class="detail-item">
                             <div class="detail-label">Address</div>
-                            <div class="detail-value">${user.address || 'Not provided'}</div>
+                            <div class="detail-value">${displayAddress}</div>
                         </div>
 
                         <div class="detail-item">
                             <div class="detail-label">Pincode</div>
-                            <div class="detail-value">${user.pincode || 'Not provided'}</div>
+                            <div class="detail-value">${displayPincode}</div>
                         </div>
                     </div>
                 </div>
