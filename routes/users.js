@@ -67,8 +67,13 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-// Get user profile by ID
-router.get('/:id', firebaseAuth, async (req, res) => {
+// Test route to debug the issue
+router.get('/test', function(req, res, next) {
+  res.json({ message: 'Test route working', timestamp: new Date().toISOString() });
+});
+
+// Get user profile by ID (without Firebase auth for verification flow)
+router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-firebaseUid -password');
     if (!user) {
@@ -78,6 +83,7 @@ router.get('/:id', firebaseAuth, async (req, res) => {
       id: user._id,
       name: user.name,
       isVerified: user.isVerified,
+      verificationStatus: user.verificationStatus,
       freelancerId: user.freelancerId
     });
     res.json(user);
