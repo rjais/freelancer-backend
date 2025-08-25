@@ -237,7 +237,7 @@ router.post('/firebase', async (req, res) => {
         role: user.role 
       },
       isNewUser: isNewUser,
-      needsVerification: user.role === 'freelancer' && (!user.isVerified || user.verificationStatus === 'pending'),
+      needsVerification: user.role === 'freelancer' && !user.verificationStatus,
       verificationStatus: user.verificationStatus,
       isRejected: user.verificationStatus === 'rejected'
     });
