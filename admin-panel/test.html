@@ -17,7 +17,7 @@
             try {
                 // Test 1: Admin Login
                 console.log('Testing admin login...');
-                const loginResponse = await fetch('http://localhost:5000/api/admin/login', {
+                const loginResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: 'admin', password: 'admin123' })
@@ -31,7 +31,7 @@
                     
                     // Test 2: Get Users
                     console.log('Testing get users...');
-                    const usersResponse = await fetch('http://localhost:5000/api/admin/users?verificationStatus=pending', {
+                    const usersResponse = await fetch('https://freelancer-backend-jv21.onrender.com/api/admin/users?verificationStatus=pending', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     

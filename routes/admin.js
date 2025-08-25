@@ -78,6 +78,19 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Verify Token Endpoint
+router.get('/verify-token', authenticateAdmin, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Token is valid',
+        user: {
+            username: 'admin',
+            role: 'admin',
+            uid: 'admin-uid'
+        }
+    });
+});
+
 // Get Users Endpoint (adapted for User model)
 router.get('/users', authenticateAdmin, async (req, res) => {
     try {

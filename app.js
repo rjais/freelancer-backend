@@ -81,6 +81,10 @@ app.get('/admin-panel/database-debug.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-panel', 'database-debug.html'));
 });
 
+app.get('/admin-panel/standalone-admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin-panel', 'standalone-admin.html'));
+});
+
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/auth', authRouter);

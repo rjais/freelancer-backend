@@ -111,7 +111,7 @@ async function loadConfiguration() {
         } else {
             // Use default config
             CONFIG = {
-                API_BASE_URL: 'http://localhost:3000/api',
+                API_BASE_URL: 'https://freelancer-backend-jv21.onrender.com/api',
                 ADMIN_SETTINGS: {
                     AUTO_REFRESH_INTERVAL: 30000
                 }

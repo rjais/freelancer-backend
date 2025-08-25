@@ -1,6 +1,6 @@
 const CONFIG = {
     // Update this to your main app's API URL
-    API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000/api',
+    API_BASE_URL: process.env.API_BASE_URL || 'https://freelancer-backend-jv21.onrender.com/api',
     
     // JWT Secret (should match your main app)
     JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
@@ -13,8 +13,8 @@ const CONFIG = {
     
     // CORS settings
     CORS_ORIGINS: [
-        'http://localhost:5000',
-        'http://localhost:3000',
+            'https://freelancer-backend-jv21.onrender.com',
+    'https://freelancer-backend-jv21.onrender.com',
         'https://your-admin-domain.com'
     ],
     

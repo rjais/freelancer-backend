@@ -31,7 +31,7 @@ const UserSchema = new mongoose.Schema({
   verifiedAt: { type: Date },
   verificationStatus: { 
     type: String, 
-    enum: ['pending', 'verified', 'rejected', 'expired'], 
+    enum: ['pending', 'verified', 'approved', 'rejected', 'expired'], 
     default: 'pending' 
   },
   resubmissionCount: { type: Number, default: 0 }, // Track number of resubmissions

@@ -38,10 +38,17 @@ async function firebaseAuth(req, res, next) {
 router.get('/debug', async (req, res) => {
     try {
         const users = await User.find({}).select('name email phone verificationStatus isVerified documents address city state pincode dateOfBirth gender');
+        const verifications = await Verification.find({}).select('userId name phone profileImage documents status');
         res.json({
             success: true,
-            count: users.length,
-            users: users
+            users: {
+                count: users.length,
+                data: users
+            },
+            verifications: {
+                count: verifications.length,
+                data: verifications
+            }
         });
     } catch (error) {
         console.error('Debug endpoint error:', error);
@@ -169,7 +176,8 @@ router.post('/submit', async (req, res) => {
                     pincode: pincode,
                     verificationStatus: verificationStatus || 'pending',
                     isVerified: isVerified || false,
-                    submittedAt: submittedAt || new Date()
+                    submittedAt: submittedAt || new Date(),
+                    firebaseUid: req.body.firebaseUid || null // Add Firebase UID if provided
                 };
                 
                 user = new User(userData);
@@ -403,5 +411,7 @@ router.delete('/:id', firebaseAuth, async (req, res) => {
         });
     }
 });
+
+
 
 module.exports = router;

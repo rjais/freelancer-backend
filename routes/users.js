@@ -77,6 +77,56 @@ router.get('/test/:param', function(req, res, next) {
   res.json({ message: 'Test route with param working', param: req.params.param, timestamp: new Date().toISOString() });
 });
 
+
+
+// Get user profile by Firebase UID (for frontend use)
+router.get('/by-firebase-uid/:firebaseUid', async (req, res) => {
+  console.log('🔍 GET /by-firebase-uid/:firebaseUid route hit with params:', req.params);
+  
+  try {
+    const user = await User.findOne({ firebaseUid: req.params.firebaseUid }).select('-firebaseUid -password');
+    if (!user) {
+      console.log('🔍 User not found for Firebase UID:', req.params.firebaseUid);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    console.log('User profile fetched by Firebase UID:', {
+      id: user._id,
+      name: user.name,
+      isVerified: user.isVerified,
+      verificationStatus: user.verificationStatus,
+      freelancerId: user.freelancerId
+    });
+    res.json(user);
+  } catch (err) {
+    console.error('Error in GET /api/users/by-firebase-uid/:firebaseUid:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// Get user profile by phone number (fallback for timing issues)
+router.get('/by-phone/:phone', async (req, res) => {
+  console.log('🔍 GET /by-phone/:phone route hit with params:', req.params);
+  
+  try {
+    const user = await User.findOne({ phone: req.params.phone }).select('-firebaseUid -password');
+    if (!user) {
+      console.log('🔍 User not found for phone:', req.params.phone);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    console.log('User profile fetched by phone:', {
+      id: user._id,
+      name: user.name,
+      isVerified: user.isVerified,
+      verificationStatus: user.verificationStatus,
+      freelancerId: user.freelancerId
+    });
+    res.json(user);
+  } catch (err) {
+    console.error('Error in GET /api/users/by-phone/:phone:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Get user profile by ID (without Firebase auth for verification flow)
 router.get('/:id', async (req, res) => {
   console.log('🔍 GET /:id route hit with params:', req.params);
