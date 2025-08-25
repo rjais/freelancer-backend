@@ -74,9 +74,13 @@ router.get('/test', function(req, res, next) {
 
 // Get user profile by ID (without Firebase auth for verification flow)
 router.get('/:id', async (req, res) => {
+  console.log('🔍 GET /:id route hit with params:', req.params);
+  console.log('🔍 Request headers:', req.headers);
+  
   try {
     const user = await User.findById(req.params.id).select('-firebaseUid -password');
     if (!user) {
+      console.log('🔍 User not found for ID:', req.params.id);
       return res.status(404).json({ message: 'User not found' });
     }
     console.log('User profile fetched:', {
