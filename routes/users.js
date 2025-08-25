@@ -72,6 +72,11 @@ router.get('/test', function(req, res, next) {
   res.json({ message: 'Test route working', timestamp: new Date().toISOString() });
 });
 
+// Test route with parameter
+router.get('/test/:param', function(req, res, next) {
+  res.json({ message: 'Test route with param working', param: req.params.param, timestamp: new Date().toISOString() });
+});
+
 // Get user profile by ID (without Firebase auth for verification flow)
 router.get('/:id', async (req, res) => {
   console.log('🔍 GET /:id route hit with params:', req.params);
